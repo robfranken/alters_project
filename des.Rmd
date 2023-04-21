@@ -1,0 +1,272 @@
+---
+title: "Descriptives"
+bibliography: references.bib
+date: "Last compiled on `r format(Sys.time(), '%B, %Y')`"
+output: 
+  html_document:
+    css: tweaks.css
+    toc:  true
+    toc_float: true
+    number_sections: false
+    toc_depth: 1
+    code_folding: show
+    code_download: yes
+---
+
+```{r, globalsettings, echo=FALSE, warning=FALSE, results='hide'}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+opts_chunk$set(tidy.opts=list(width.cutoff=100),tidy=TRUE, warning = FALSE, message = FALSE,comment = "#>", cache=TRUE, class.source=c("test"), class.output=c("test3"))
+options(width = 100)
+rgl::setupKnitr()
+```
+
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy(position = c('top', 'right'))
+#klippy::klippy(color = 'darkred')
+#klippy::klippy(tooltip_message = 'Click to copy', tooltip_success = 'Done')
+```
+
+
+---  
+
+# Getting started
+
+To copy the code, click the button in the upper right corner of the code-chunks.
+
+## clean up
+
+```{r, results='hide'}
+rm(list=ls())
+gc()
+```
+
+<br>
+
+## general custom functions
+
+- `fpackage.check`: Check if packages are installed (and install if not) in R
+- `fsave`: Function to save data with time stamp in correct directory
+- `fload`: Function to load R-objects under new names
+
+```{r}
+fpackage.check <- function(packages) {
+    lapply(packages, FUN = function(x) {
+        if (!require(x, character.only = TRUE)) {
+            install.packages(x, dependencies = TRUE)
+            library(x, character.only = TRUE)
+        }
+    })
+}
+
+fsave <- function(x, file, location = "./data/processed/", ...) {
+    if (!dir.exists(location))
+        dir.create(location)
+    datename <- substr(gsub("[:-]", "", Sys.time()), 1, 8)
+    totalname <- paste(location, datename, file, sep = "")
+    print(paste("SAVED: ", totalname, sep = ""))
+    save(x, file = totalname)
+}
+
+
+fload  <- function(fileName){
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+
+colorize <- function(x, color) {sprintf("<span style='color: %s;'>%s</span>", color, x) }
+```
+
+<br>
+
+## necessary packages
+
+- `tidyverse`
+- `ggplot2`
+- `reshape2`
+- `lattice`
+
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+packages = c("tidyverse", "ggplot2", "reshape2", "lattice")
+fpackage.check(packages)
+rm(packages)
+```
+
+<br>
+
+## import data
+
+Load in the created data-set. You may have to adjust the date..
+
+```{r}
+#today <- substr(gsub("[:-]", "", Sys.time()), 1, 8)
+today <- "20230419"
+data <- fload(paste0("./data/processed/", today, "output.R"))
+```
+
+
+```{r,eval=F}
+#145 unique (ego-) respondents
+length(unique(data$respnr))
+
+#235 responses from ego (about alters), 235 responses from alter (about ego)
+table(data$response)
+```
+
+
+<br>
+
+
+Let's for now focus only on mono-plex ties, that is alters that were listed in one name generator only.
+
+```{r}
+data$multiplexity <- rowSums(cbind(data$cdn, data$study, data$bff, data$csn))
+#prop.table(table(data$multiplexity))[1]*100
+
+data.1 <- data[which(data$multiplexity==1), ]
+#328 monoplex ties
+
+#make a character variable indicating the type of (monoplex) relation
+data.1$Relationship <- ifelse(data.1$cdn==1, "Confidant", ifelse(data.1$study==1, "Study partner", ifelse(data.1$bff==1, "Best Friend", ifelse(data.1$csn==1, "Sports partner", NA) )))
+```
+
+<br>
+
+`r round(prop.table(table(data$multiplexity))[1]*100)` % of relations in our data-set are monoplex.
+
+<br>
+
+
+# Relationship type
+
+Does accuracy of estimating an alter's behavior/attitude depend on the type of relationship?
+
+
+```{r, fig.width=12, fig.height=8}
+#plotting data
+df <- rbind(
+  data.1[which(data.1$Relationship=="Confidant"), c(64, which(grepl( "accuracy", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(64, which(grepl( "accuracy", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(64, which(grepl( "accuracy", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(64, which(grepl( "accuracy", names(data.1))))]
+)
+
+# Reshape the data from wide to long format
+df_long <- df %>% pivot_longer(-Relationship, names_to = "variable", values_to = "value")
+
+# Convert the variable column to a factor with a specific order
+df_long$variable <- factor(df_long$variable, levels = c("LR.accuracy", "imp_crime.accuracy", "imp_climate.accuracy", "imp_discrim.accuracy", "imp_housing.accuracy", "imp_refugee.accuracy", "sechand.accuracy", "replace.accuracy", "animal.accuracy", "fly.accuracy", "meat.accuracy", "nature.accuracy", "cap.accuracy", "student.accuracy", "threat.accuracy"))
+
+#add n and prop. to relationship label, for the plot.
+df_long$RelationshipLab <- ifelse(df_long$Relationship=="Confidant", 
+                                  paste0("Confidant (n=", length(which(data.1$Relationship=="Confidant")), "; ", round(length(which(data.1$Relationship=="Confidant")) / nrow(data.1) *100,2), "%)"),
+                                 ifelse(df_long$Relationship=="Study partner", 
+                                        paste0("Study partner (n=", length(which(data.1$Relationship=="Study partner")), "; ", round(length(which(data.1$Relationship=="Study partner")) / nrow(data.1) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Best Friend", 
+                                        paste0("Best Friend (n=", length(which(data.1$Relationship=="Best Friend")), "; ", round(length(which(data.1$Relationship=="Best Friend")) / nrow(data.1) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Sports partner", 
+                                        paste0("Sports partner (n=", length(which(data.1$Relationship=="Sports partner")), "; ", round(length(which(data.1$Relationship=="Sports partner")) / nrow(data.1) *100,2), "%)"), NA))))
+                                        
+# create a ggplot object 
+p <- ggplot(df_long, aes(x = variable, y = value, fill = variable))
+
+# add a violin plot layer, with each variable represented by a different color
+p <- p + geom_violin()
+
+# add summary statistics to the violin plots
+p <- p + stat_summary(fun = mean, geom = "point", shape = 18, size = 3, color = "black")
+p <- p + stat_summary(fun = median, geom = "point", shape = 23, size = 3, color = "black")
+p <- p + stat_summary(geom = "errorbar", fun.data = "median_hilow", color = "black", width = .5)
+
+# facet the plot by group
+p <- p + facet_wrap(~ RelationshipLab, nrow = 2)
+
+# add x and y axis labels and a plot title
+p <- p + labs(x = "Item", y = "Accuracy score (0-1)", title = paste0("Accuracy scores for alter placement on multiple items, by (monoplex) relationship type (n=", nrow(data.1), ").") , subtitle = "Violin plots showing item-level accuracy distribution with median (transparent square), mean (black square), and IQR (error bars).", caption = "Note: accuracy = abs(perception - truth) / range(item).")
+
+# Adjust the legend position and title
+p <- p + theme(legend.position = "right", legend.title = element_blank())
+
+# remove x axis label
+p <- p + scale_x_discrete(labels = NULL)
+
+#adjust title text size
+p <- p + theme(
+  plot.title = element_text(size=16, face="bold"),
+  plot.subtitle = element_text(size = 12),
+  strip.text = element_text(size = 16),
+  legend.text = element_text(size = 12),
+  axis.title.y= element_text(size = 16),
+  axis.title.x= element_text(size = 16),
+  plot.caption = element_text(size = 12),
+)
+
+
+#last, give custom labels for the items
+p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  ))
+
+print(p)
+
+```
+  
+  
+  
+<br>
+
+# Embeddedness
+
+Relation between embeddedness and accuracy, across (monoplex) relationship types
+
+
+```{r, fig.width=12, fig.height=8}
+#exclude cases with NA on embeddedness (i.e., alter responses)
+df <- data.1[which(!is.na(data.1$embeddedness)),]
+#nrow(df) #164 ego-alter dyads
+
+#subset accuracy measures, relationship type, embeddedness and respnr
+#names(df)
+df <- df[,c(1,16,64,which(grepl("accuracy", names(df))))]
+
+# Reshape the data from wide to long format
+df_long <- df %>% pivot_longer(-c(Relationship, embeddedness, respnr), names_to = "variable", values_to = "value")
+
+#add n and prop. to relationship label, for the plot.
+df_long$RelationshipLab <- ifelse(df_long$Relationship=="Confidant", 
+                                  paste0("Confidant (n=", length(which(df$Relationship=="Confidant")), "; ", round(length(which(df$Relationship=="Confidant")) / nrow(df) *100,2), "%)"),
+                                 ifelse(df_long$Relationship=="Study partner", 
+                                        paste0("Study partner (n=", length(which(df$Relationship=="Study partner")), "; ", round(length(which(df$Relationship=="Study partner")) / nrow(df) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Best Friend", 
+                                        paste0("Best Friend (n=", length(which(df$Relationship=="Best Friend")), "; ", round(length(which(df$Relationship=="Best Friend")) / nrow(df) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Sports partner", 
+                                        paste0("Sports partner (n=", length(which(df$Relationship=="Sports partner")), "; ", round(length(which(df$Relationship=="Sports partner")) / nrow(df) *100,2), "%)"), NA))))
+
+#plot
+p <- ggplot(df_long, aes(x = embeddedness, y = value))
+  
+#add scatterplot
+p <- p + geom_point() +
+  geom_smooth(method = "loess")
+
+#add facets by relationship
+p <- p + facet_wrap(.~ RelationshipLab)
+
+p <- p + labs(x = "Structural embeddedness (0-1)", y = "Accuracy score (0-1)", title = "Relation between alter's structural embeddedness and ego's positioning accuracy,\nby (monoplex) relationship type (n=164)." , subtitle = "Scatterplot and LOESS curve", caption = "Note: accuracy = abs(perception - truth) / range(item).")
+
+#title
+p <- p + theme(
+  plot.title = element_text(size=16, face="bold"),
+  plot.subtitle = element_text(size = 12),
+  strip.text = element_text(size = 16),
+  legend.text = element_text(size = 12),
+  axis.title.y= element_text(size = 16),
+  axis.title.x= element_text(size = 16),
+  plot.caption = element_text(size = 12),
+)
+
+print(p)
+```
+
+
+
+  

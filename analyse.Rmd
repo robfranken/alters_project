@@ -1,0 +1,228 @@
+---
+title: "Models"
+bibliography: references.bib
+date: "Last compiled on `r format(Sys.time(), '%B, %Y')`"
+output: 
+  html_document:
+    css: tweaks.css
+    toc:  true
+    toc_float: true
+    number_sections: false
+    toc_depth: 1
+    code_folding: show
+    code_download: yes
+---
+
+```{r, globalsettings, echo=FALSE, warning=FALSE, results='hide'}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+opts_chunk$set(tidy.opts=list(width.cutoff=100),tidy=TRUE, warning = FALSE, message = FALSE,comment = "#>", cache=TRUE, class.source=c("test"), class.output=c("test3"))
+options(width = 100)
+rgl::setupKnitr()
+```
+
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy(position = c('top', 'right'))
+#klippy::klippy(color = 'darkred')
+#klippy::klippy(tooltip_message = 'Click to copy', tooltip_success = 'Done')
+```
+
+
+---  
+
+# Getting started
+
+To copy the code, click the button in the upper right corner of the code-chunks.
+
+## clean up
+
+```{r, results='hide'}
+rm(list=ls())
+gc()
+```
+
+<br>
+
+## general custom functions
+
+- `fpackage.check`: Check if packages are installed (and install if not) in R
+- `fsave`: Function to save data with time stamp in correct directory
+- `fload`: Function to load R-objects under new names
+
+```{r}
+fpackage.check <- function(packages) {
+    lapply(packages, FUN = function(x) {
+        if (!require(x, character.only = TRUE)) {
+            install.packages(x, dependencies = TRUE)
+            library(x, character.only = TRUE)
+        }
+    })
+}
+
+fsave <- function(x, file, location = "./data/processed/", ...) {
+    if (!dir.exists(location))
+        dir.create(location)
+    datename <- substr(gsub("[:-]", "", Sys.time()), 1, 8)
+    totalname <- paste(location, datename, file, sep = "")
+    print(paste("SAVED: ", totalname, sep = ""))
+    save(x, file = totalname)
+}
+
+
+fload  <- function(fileName){
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+
+colorize <- function(x, color) {sprintf("<span style='color: %s;'>%s</span>", color, x) }
+```
+
+<br>
+
+## necessary packages
+
+- `tidyverse`
+- `ggplot2`
+- `reshape2`
+- `lattice`
+
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+packages = c("tidyverse", "ggplot2", "reshape2", "lattice")
+fpackage.check(packages)
+rm(packages)
+```
+
+<br>
+
+## import data
+
+Load in the created data-set. You may have to adjust the date..
+
+```{r,eval=F}
+today <- substr(gsub("[:-]", "", Sys.Date()-1), 1, 8)
+#today <- substr(gsub("[:-]", "", Sys.Date()), 1, 8)
+data <- fload(paste0("./data/processed/", today, "output.R"))
+```
+
+<br>
+
+## reshape 
+
+```{r,eval=F}
+#add multiplexity as a control 
+#subtract by 1 to reach meaningful intercept (i.e., monoplex)
+data$multiplexity <- rowSums(cbind(data$cdn, data$study, data$bff, data$csn)) - 1
+
+#also add as dummies
+#data$monoplex <- ifelse(data$multiplexity==0,1,0)
+#data$multiplex <- ifelse(data$multiplexity>0,1,0)
+
+#for now, get only monoplex ties
+data.1 <- data[which(data$multiplexity==0),]
+
+# Reshape the data from wide to long format
+df_long <- data.1 %>% pivot_longer(which(grepl("accuracy", names(data.1))), names_to = "item", values_to = "accuracy")
+df_long$respnr <- factor(df_long$respnr, ordered = FALSE)
+```
+
+
+----
+
+<br>
+
+# OLS
+
+```{r,eval=F}
+mod1 <- lm(accuracy ~ cdn + study + bff, data=df_long)
+summary(mod1)
+
+```
+
+
+# Mixed effects model
+
+we have individual responses (ego and alter: L1), nested within dyads (L2).
+
+<br>
+
+## null model
+
+No predictors
+
+```{r,eval=F}
+mod1 <- lmer(accuracy ~ (1|respnr), data=df_long, REML=FALSE)
+summary(mod1)
+
+?lmer
+df_long$value
+
+
+
+
+df_long$respnr <- factor(df_long$respnr, ordered = FALSE)
+mod1 <- lmer(value ~ (1|respnr), data=df_long)
+#summary(mod1)
+
+df_long %>%
+  #save predicted values
+  mutate(pred_accuracy = fitted(mod1)) %>%
+  #graph
+  ggplot(aes(x=Relationship, y=pred_accuracy, group=respnr, color=respnr)) + theme_classic() +
+  geom_point(size=1) -> p
+
+p <- p + labs(x = "Relationship type", y = "Predicted accuracy score (0-1)", title = "Predicted values of null-model (mod1).", subtitle = "Predicted values per (monoplex) relationship type.")
+p <- p + theme(legend.position = "none")
+print(p)
+```
+
+
+## Random intercept
+
+add independent variable, embeddedness
+
+```{r,eval=F}
+# embeddedness
+mod2 <- lmer(value ~ Relationship + (1|respnr), data=df_long)
+#summary(mod2)
+
+df_long %>%
+  #save predicted values
+  mutate(pred_accuracy = fitted(mod2)) %>%
+  #graph
+  ggplot(aes(x=Relationship, y=pred_accuracy, group=respnr, color=respnr)) + theme_classic() +
+  geom_point(size=1) -> p
+
+p <- p + labs(x = "Relationship type", y = "Predicted accuracy score (0-1)", title = "Predicted values of random intercept model (mod2).", subtitle= "Ego-level random intercept. Predicted values per (monoplex) relationship type.")
+p <- p + theme(legend.position = "none")
+print(p)
+```
+
+<br>
+
+also add embeddedness
+
+```{r,eval=F}
+# embeddedness
+mod3 <- lmer(value ~ Relationship + embeddedness + (1|respnr), data=df_long)
+#summary(mod3)
+
+df_long %>%
+  #save predicted values
+  mutate(pred_accuracy = fitted(mod3)) %>%
+  #graph
+  ggplot(aes(x=Relationship, y=pred_accuracy, group=respnr, color=respnr)) + theme_classic() +
+  geom_point(size=1) -> p
+
+p <- p + labs(x = "Relationship type", y = "Predicted accuracy score (0-1)", title = "Predicted values of random intercept model (mod3).", subtitle= "Ego-level random intercept. Predicted values per (monoplex) relationship type.")
+p <- p + theme(legend.position = "none")
+print(p)
+```
+
+<br>
+
+Note: model with random slope is near singular..
+
+
+
+
