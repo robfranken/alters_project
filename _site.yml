@@ -36,7 +36,7 @@ navbar:
       
   right:
     - icon: fab fa-github
-      href: https://github.com/robfranken/alter_project
+      href: https://github.com/robfranken/alters_project
 output:
   html_document:
     theme: flatly
