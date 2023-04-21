@@ -97,11 +97,14 @@ rm(packages)
 
 ## import data
 
-Load in the created data-set. You may have to adjust the date..
+Load in the replicated data-set. You may have to adjust the date...
+
+You may also obtain it by downloading: `r xfun::embed_file("./data shared/output.R")`
+
 
 ```{r}
-#today <- substr(gsub("[:-]", "", Sys.time()), 1, 8)
-today <- "20230419"
+#today <- substr(gsub("[:-]", "", Sys.time()), 1, 8) #get todays date
+today <- "20230419" 
 data <- fload(paste0("./data/processed/", today, "output.R"))
 ```
 
