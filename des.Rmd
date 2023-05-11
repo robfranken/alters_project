@@ -104,7 +104,7 @@ You may also obtain it by downloading: `r xfun::embed_file("./data shared/output
 
 ```{r}
 #today <- substr(gsub("[:-]", "", Sys.time()), 1, 8) #get todays date
-today <- "20230419" 
+today <- "20230511" 
 data <- fload(paste0("./data/processed/", today, "output.R"))
 ```
 
@@ -157,9 +157,8 @@ two additional:
 
 ```{r}
 #accuracy side
-{
-data.1$LR.accuracy_side <- ifelse(( (data.1$LR.percepton %in% c(0:10)[1:round(length(c(0:10))/2)] & data.1$LR.truth %in% c(0:10)[1:round(length(c(0:10))/2)])
-                                    |(data.1$LR.percepton %in% c(0:10)[round(length(c(0:10))/2):11] & data.1$LR.truth %in%
+data.1$LR.accuracy_side <- ifelse(( (data.1$LR.perception %in% c(0:10)[1:round(length(c(0:10))/2)] & data.1$LR.truth %in% c(0:10)[1:round(length(c(0:10))/2)])
+                                    |(data.1$LR.perception %in% c(0:10)[round(length(c(0:10))/2):11] & data.1$LR.truth %in%
                                         c(0:10)[round(length(c(0:10))/2):11]) ) ,1,0)
 
 data.1$cap.accuracy_side <- ifelse( (data.1$cap.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$cap.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
@@ -190,11 +189,10 @@ data.1$imp_refugee.accuracy_side <- ifelse( (data.1$imp_refugee.perception %in% 
   (data.1$imp_refugee.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$imp_refugee.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
 data.1$imp_climate.accuracy_side <- ifelse( (data.1$imp_climate.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$imp_climate.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
   (data.1$imp_climate.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$imp_climate.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
-}
+
 
 #accuracy precise
-{
-data.1$LR.accuracy_precise <- ifelse(data.1$LR.percepton == data.1$LR.truth,1,0)
+data.1$LR.accuracy_precise <- ifelse(data.1$LR.perception == data.1$LR.truth,1,0)
 data.1$cap.accuracy_precise <- ifelse(data.1$cap.perception == data.1$cap.truth,1,0)
 data.1$fly.accuracy_precise <- ifelse(data.1$fly.perception == data.1$fly.truth,1,0)
 data.1$meat.accuracy_precise <- ifelse(data.1$meat.perception == data.1$meat.truth,1,0)
@@ -209,17 +207,17 @@ data.1$imp_discrim.accuracy_precise <- ifelse(data.1$imp_discrim.perception == d
 data.1$imp_housing.accuracy_precise <- ifelse(data.1$imp_housing.perception == data.1$imp_housing.truth,1,0)
 data.1$imp_refugee.accuracy_precise <- ifelse(data.1$imp_refugee.perception == data.1$imp_refugee.truth,1,0)
 data.1$imp_climate.accuracy_precise <- ifelse(data.1$imp_climate.perception == data.1$imp_climate.truth,1,0)
-}
+
 ```
 
 
-```{r, fig.width=12, fig.height=8}
+```{r fig.height=8, fig.width=12}
 #plotting data
 df <- rbind(
-  data.1[which(data.1$Relationship=="Confidant"), c(64, which(grepl( "accuracy", names(data.1))))],
-  data.1[which(data.1$Relationship=="Study partner"), c(64, which(grepl( "accuracy", names(data.1))))],
-  data.1[which(data.1$Relationship=="Best Friend"), c(64, which(grepl( "accuracy", names(data.1))))],
-  data.1[which(data.1$Relationship=="Sports partner"), c(64, which(grepl( "accuracy", names(data.1))))]
+  data.1[which(data.1$Relationship=="Confidant"), c(79, which(grepl( "accuracy", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(79, which(grepl( "accuracy", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(79, which(grepl( "accuracy", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(79, which(grepl( "accuracy", names(data.1))))]
 )
 
 # Reshape the data from wide to long format
@@ -296,10 +294,10 @@ Accuracy has no clear relationship with relationship type. Let's try different o
 ```{r, fig.width=12, fig.height=8, collapse=TRUE}
 #plotting data
 df <- rbind(
-  data.1[which(data.1$Relationship=="Confidant"), c(64, which(grepl( "accuracy_side", names(data.1))))],
-  data.1[which(data.1$Relationship=="Study partner"), c(64, which(grepl( "accuracy_side", names(data.1))))],
-  data.1[which(data.1$Relationship=="Best Friend"), c(64, which(grepl( "accuracy_side", names(data.1))))],
-  data.1[which(data.1$Relationship=="Sports partner"), c(64, which(grepl( "accuracy_side", names(data.1))))]
+  data.1[which(data.1$Relationship=="Confidant"), c(79, which(grepl( "accuracy_side", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(79, which(grepl( "accuracy_side", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(79, which(grepl( "accuracy_side", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(79, which(grepl( "accuracy_side", names(data.1))))]
 )
 
 # Reshape the data from wide to long format
@@ -364,10 +362,10 @@ print(p)
 ```{r, fig.width=12, fig.height=8}
 #plotting data
 df <- rbind(
-  data.1[which(data.1$Relationship=="Confidant"), c(64, which(grepl( "accuracy_precise", names(data.1))))],
-  data.1[which(data.1$Relationship=="Study partner"), c(64, which(grepl( "accuracy_precise", names(data.1))))],
-  data.1[which(data.1$Relationship=="Best Friend"), c(64, which(grepl( "accuracy_precise", names(data.1))))],
-  data.1[which(data.1$Relationship=="Sports partner"), c(64, which(grepl( "accuracy_precise", names(data.1))))]
+  data.1[which(data.1$Relationship=="Confidant"), c(79, which(grepl( "accuracy_precise", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(79, which(grepl( "accuracy_precise", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(79, which(grepl( "accuracy_precise", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(79, which(grepl( "accuracy_precise", names(data.1))))]
 )
 
 # Reshape the data from wide to long format
@@ -441,7 +439,7 @@ df <- data.1[which(!is.na(data.1$embeddedness)),]
 
 #subset accuracy measures, relationship type, embeddedness and respnr
 #names(df)
-df <- df[,c(1,16,64,which(grepl("accuracy", names(df))))]
+df <- df[,c(1,16,79,which(grepl("accuracy", names(df))))]
 
 # Reshape the data from wide to long format
 df_long <- df %>% pivot_longer(-c(Relationship, embeddedness, respnr), names_to = "variable", values_to = "value")
@@ -495,7 +493,7 @@ df <- data.1[which(!is.na(data.1$embeddedness)),]
 
 #subset accuracy measures, relationship type, embeddedness and respnr
 #names(df)
-df <- df[,c(1,16,64,which(grepl("accuracy_side", names(df))))]
+df <- df[,c(1,16,79,which(grepl("accuracy_side", names(df))))]
 
 # Reshape the data from wide to long format
 df_long <- df %>% pivot_longer(-c(Relationship, embeddedness, respnr), names_to = "variable", values_to = "value")
@@ -545,7 +543,7 @@ df <- data.1[which(!is.na(data.1$embeddedness)),]
 
 #subset accuracy measures, relationship type, embeddedness and respnr
 #names(df)
-df <- df[,c(1,16,64,which(grepl("accuracy_precise", names(df))))]
+df <- df[,c(1,16,79,which(grepl("accuracy_precise", names(df))))]
 
 # Reshape the data from wide to long format
 df_long <- df %>% pivot_longer(-c(Relationship, embeddedness, respnr), names_to = "variable", values_to = "value")
@@ -587,4 +585,100 @@ print(p)
 ```
 
 ## {.unlisted .unnumbered}
+
+----
+
+# Similarity
+
+Does similarity/agreement differ across relationship types?
+
+```{r, fig.width=12, fig.height=8}
+#same violin plot, but replace accuracy with (dis)similarity
+
+#similarity = 1- ( |self-report - truth|)/range
+data.1$LR.sim <- 1-abs(data.1$LR.self - data.1$LR.truth)/10
+data.1$imp_crime.sim <- 1-abs(data.1$imp_crime.self - data.1$imp_crime.truth)/3
+data.1$imp_climate.sim <- 1-abs(data.1$imp_climate.self - data.1$imp_climate.truth)/3
+data.1$imp_discrim.sim <- 1-abs(data.1$imp_discrim.self - data.1$imp_discrim.truth)/3
+data.1$imp_housing.sim <- 1-abs(data.1$imp_housing.self - data.1$imp_housing.truth)/3
+data.1$imp_refugee.sim <- 1-abs(data.1$imp_refugee.self - data.1$imp_refugee.truth)/3
+data.1$sechand.sim <- 1 - abs(data.1$sechand.self-data.1$sechand.truth)/3
+data.1$replace.sim <- 1 - abs(data.1$replace.self-data.1$replace.truth)/3
+data.1$animal.sim <- 1 - abs(data.1$animal.self-data.1$animal.truth)/3
+data.1$fly.sim <- 1 - abs(data.1$fly.self-data.1$fly.truth)/3
+data.1$meat.sim <- 1 - abs(data.1$meat.self-data.1$meat.truth)/3
+data.1$nature.sim <- 1 - abs(data.1$nature.self-data.1$nature.truth)/3
+data.1$cap.sim <- 1 - abs(data.1$cap.self-data.1$cap.truth)/3
+data.1$student.sim <- 1 - abs(data.1$student.self-data.1$student.truth)/3
+data.1$threat.sim <- 1 - abs(data.1$threat.self-data.1$threat.truth)/3
+
+#plotting data
+df <- rbind(
+  data.1[which(data.1$Relationship=="Confidant"), c(79, which(grepl( ".sim", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(79, which(grepl( ".sim", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(79, which(grepl( ".sim", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(79, which(grepl( ".sim", names(data.1))))]
+)
+#fix(df)
+# Reshape the data from wide to long format
+df_long <- df[,c(1:16)] %>% pivot_longer(-Relationship, names_to = "variable", values_to = "value")
+
+# Convert the variable column to a factor with a specific order
+df_long$variable <- factor(df_long$variable, levels = c("LR.sim", "imp_crime.sim", "imp_climate.sim", "imp_discrim.sim", "imp_housing.sim", "imp_refugee.sim", "sechand.sim", "replace.sim", "animal.sim", "fly.sim", "meat.sim", "nature.sim", "cap.sim", "student.sim", "threat.sim"))
+
+#add n and prop. to relationship label, for the plot.
+df_long$RelationshipLab <- ifelse(df_long$Relationship=="Confidant", 
+                                  paste0("Confidant (n=", length(which(data.1$Relationship=="Confidant")), "; ", round(length(which(data.1$Relationship=="Confidant")) / nrow(data.1) *100,2), "%)"),
+                                 ifelse(df_long$Relationship=="Study partner", 
+                                        paste0("Study partner (n=", length(which(data.1$Relationship=="Study partner")), "; ", round(length(which(data.1$Relationship=="Study partner")) / nrow(data.1) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Best Friend", 
+                                        paste0("Best Friend (n=", length(which(data.1$Relationship=="Best Friend")), "; ", round(length(which(data.1$Relationship=="Best Friend")) / nrow(data.1) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Sports partner", 
+                                        paste0("Sports partner (n=", length(which(data.1$Relationship=="Sports partner")), "; ", round(length(which(data.1$Relationship=="Sports partner")) / nrow(data.1) *100,2), "%)"), NA))))
+                                        
+# create a ggplot object 
+p <- ggplot(df_long, aes(x = variable, y = value, fill = variable))
+
+# add a violin plot layer, with each variable represented by a different color
+p <- p + geom_violin()
+
+# add summary statistics to the violin plots
+p <- p + stat_summary(fun = mean, geom = "point", shape = 18, size = 3, color = "black")
+p <- p + stat_summary(fun = median, geom = "point", shape = 23, size = 3, color = "black")
+p <- p + stat_summary(geom = "errorbar", fun.data = "median_hilow", color = "black", width = .5)
+
+# facet the plot by group
+p <- p + facet_wrap(~ RelationshipLab, nrow = 2)
+
+# add x and y axis labels and a plot title
+p <- p + labs(x = "Item", y = "Similarity score (0-1)", title = paste0("Similarity scores for ego and alter on multiple items, by (monoplex) relationship type (n=", nrow(data.1), ").") , subtitle = "Violin plots showing item-level similarity distribution with median (transparent square), mean (black square), and IQR (error bars).", caption = "Note: similarity = abs(self - truth) / range(item).")
+
+# Adjust the legend position and title
+p <- p + theme(legend.position = "right", legend.title = element_blank())
+
+# remove x axis label
+p <- p + scale_x_discrete(labels = NULL)
+
+#adjust title text size
+p <- p + theme(
+  plot.title = element_text(size=16, face="bold"),
+  plot.subtitle = element_text(size = 12),
+  strip.text = element_text(size = 16),
+  legend.text = element_text(size = 12),
+  axis.title.y= element_text(size = 16),
+  axis.title.x= element_text(size = 16),
+  plot.caption = element_text(size = 12),
+)
+
+
+#last, give custom labels for the items
+p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  ))
+
+print(p)
+
+```
+
+
+Relation between similarity and accuracy across relationship types?
+
 

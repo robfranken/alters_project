@@ -70,7 +70,6 @@ fsave <- function(x, file, location = "./data/processed/", ...) {
     save(x, file = totalname)
 }
 
-
 fload  <- function(fileName){
   load(fileName)
   get(ls()[ls() != "fileName"])
@@ -255,56 +254,71 @@ df <- data.frame(respnr = alter$respnr,
                  #### opionions ######
                  
                  #left right placement
-                 LR.percepton = NA,
+                 LR.self = NA,
+                 LR.perception = NA,
                  LR.truth = NA,
                  LR.accuracy = NA,
                  
                  #importance of political themes
+                 imp_crime.self = NA,
                  imp_crime.perception = NA, #crime
                  imp_crime.truth = NA,
                  imp_crime.accuracy = NA,
+                 imp_climate.self = NA,
                  imp_climate.perception = NA, #climate
                  imp_climate.truth = NA,
                  imp_climate.accuracy = NA,
+                 imp_discrim.self = NA,
                  imp_discrim.perception = NA, #discrimination 
                  imp_discrim.truth = NA,
                  imp_discrim.accuracy = NA,
+                 imp_housing.self = NA,
                  imp_housing.perception = NA, #housing shortage
                  imp_housing.truth = NA,
                  imp_housing.accuracy = NA,
+                 imp_refugee.self = NA,
                  imp_refugee.perception = NA, #refugees
                  imp_refugee.truth = NA,
                  imp_refugee.accuracy = NA,
           
                  #eco-friendly actions
+                 sechand.self = NA,
                  sechand.perception = NA, #buying second hand products
                  sechand.truth = NA,
-                 sechand.accuracy = NA, 
+                 sechand.accuracy = NA,
+                 replace.self = NA,
                  replace.perception = NA, #using items as long as possible before replacement
                  replace.truth = NA, 
-                 replace.accuracy = NA, 
+                 replace.accuracy = NA,
+                 animal.self = NA,
                  animal.perception = NA, #reduced consumption of animal products
                  animal.truth = NA, 
                  animal.accuracy = NA, 
                  
                  #climate policy
+                 fly.self = NA,
                  fly.perception = NA, #flight tax
                  fly.truth = NA,
-                 fly.accuracy = NA, 
+                 fly.accuracy = NA,
+                 meat.self = NA,
                  meat.perception = NA, #meat tax
                  meat.truth = NA, 
-                 meat.accuracy = NA, 
+                 meat.accuracy = NA,
+                 nature.self = NA,
                  nature.perception = NA, #expandng nature reserves
                  nature.truth = NA, 
                  nature.accuracy = NA, 
                  
                  #migration (policy)
+                 cap.self = NA,
                  cap.perception = NA, #annual cap on asylum seekers
                  cap.truth = NA,
-                 cap.accuracy = NA, 
+                 cap.accuracy = NA,
+                 student.self=NA,
                  student.perception = NA, #international students 'enrich' Dutch universities
                  student.truth = NA, 
                  student.accuracy = NA, 
+                 threat.self = NA,
                  threat.perception = NA, #migration as a threat to Dutch culture
                  threat.truth = NA, 
                  threat.accuracy = NA)
@@ -426,11 +440,27 @@ for (i in unique(df$respnr)) {
   
   df$embeddedness[which(df$respnr==i)] <- c(embedX,embedY)[ind]
 
-
+  #### ego's own position
+  df$LR.self[which(df$respnr==i)] <- as.numeric(stringr::str_extract(egodata$P1, pattern = "\\(?[0-9,.]+\\)?"))
+  df$imp_crime.self[which(df$respnr==i)] <- egodata$P2.SQ001.
+  df$imp_climate.self[which(df$respnr==i)] <- egodata$P2.SQ002.
+  df$imp_discrim.self[which(df$respnr==i)] <- egodata$P2.SQ003.
+  df$imp_housing.self[which(df$respnr==i)] <- egodata$P2.SQ004.
+  df$imp_refugee.self[which(df$respnr==i)] <- egodata$P2.SQ005.
+  df$sechand.self[which(df$respnr==i)] <- egodata$C2.SQ001.
+  df$replace.self[which(df$respnr==i)] <- egodata$C2.SQ002.
+  df$animal.self[which(df$respnr==i)] <- egodata$C2.SQ003.
+  df$fly.self[which(df$respnr==i)] <- egodata$C1.SQ001.
+  df$meat.self[which(df$respnr==i)] <- egodata$C1.SQ002.
+  df$nature.self[which(df$respnr==i)] <- egodata$C1.SQ003.
+  df$cap.self[which(df$respnr==i)] <- egodata$M1.SQ001.
+  df$student.self[which(df$respnr==i)] <- egodata$M1.SQ002.
+  df$threat.self[which(df$respnr==i)] <- egodata$M1.SQ003.
+  
   #### ego's perception of corresponding alters' positions
   
   #LR
-  df$LR.percepton[which(df$respnr==i)] <- 
+  df$LR.perception[which(df$respnr==i)] <- 
     c(as.numeric(stringr::str_extract(egodata$P1X,pattern = "\\(?[0-9,.]+\\)?")),
       as.numeric(stringr::str_extract(egodata$P1Y,pattern = "\\(?[0-9,.]+\\)?")) )[ind]
   
@@ -504,7 +534,7 @@ for (i in unique(df$respnr)) {
 df[,17:length(df)] <- lapply(names(df)[-c(1:16)], function(x) as.numeric(df[[x]]))
 
 {
-df$LR.accuracy <- 1-abs(df$LR.percepton-df$LR.truth)/11
+df$LR.accuracy <- 1-abs(df$LR.perception-df$LR.truth)/11
 df$imp_crime.accuracy <- 1-abs(df$imp_crime.perception-df$imp_crime.truth)/4
 df$imp_climate.accuracy <- 1-abs(df$imp_climate.perception-df$imp_climate.truth)/4
 df$imp_discrim.accuracy <- 1-abs(df$imp_discrim.perception-df$imp_discrim.truth)/4
@@ -563,59 +593,74 @@ df <- data.frame(respnr = alter$respnr,
                  #dyad
                  duration = NA,
               
-                 #### opionions ######
+  #### opionions ######
                  
                  #left right placement
-                 LR.percepton = NA,
+                 LR.self = NA,
+                 LR.perception = NA,
                  LR.truth = NA,
                  LR.accuracy = NA,
                  
                  #importance of political themes
+                 imp_crime.self = NA,
                  imp_crime.perception = NA, #crime
                  imp_crime.truth = NA,
                  imp_crime.accuracy = NA,
+                 imp_climate.self = NA,
                  imp_climate.perception = NA, #climate
                  imp_climate.truth = NA,
                  imp_climate.accuracy = NA,
+                 imp_discrim.self = NA,
                  imp_discrim.perception = NA, #discrimination 
                  imp_discrim.truth = NA,
                  imp_discrim.accuracy = NA,
+                 imp_housing.self = NA,
                  imp_housing.perception = NA, #housing shortage
                  imp_housing.truth = NA,
                  imp_housing.accuracy = NA,
+                 imp_refugee.self = NA,
                  imp_refugee.perception = NA, #refugees
                  imp_refugee.truth = NA,
                  imp_refugee.accuracy = NA,
           
                  #eco-friendly actions
+                 sechand.self = NA,
                  sechand.perception = NA, #buying second hand products
                  sechand.truth = NA,
-                 sechand.accuracy = NA, 
+                 sechand.accuracy = NA,
+                 replace.self = NA,
                  replace.perception = NA, #using items as long as possible before replacement
                  replace.truth = NA, 
-                 replace.accuracy = NA, 
+                 replace.accuracy = NA,
+                 animal.self = NA,
                  animal.perception = NA, #reduced consumption of animal products
                  animal.truth = NA, 
                  animal.accuracy = NA, 
                  
                  #climate policy
+                 fly.self = NA,
                  fly.perception = NA, #flight tax
                  fly.truth = NA,
-                 fly.accuracy = NA, 
+                 fly.accuracy = NA,
+                 meat.self = NA,
                  meat.perception = NA, #meat tax
                  meat.truth = NA, 
-                 meat.accuracy = NA, 
+                 meat.accuracy = NA,
+                 nature.self = NA,
                  nature.perception = NA, #expandng nature reserves
                  nature.truth = NA, 
                  nature.accuracy = NA, 
                  
                  #migration (policy)
+                 cap.self = NA,
                  cap.perception = NA, #annual cap on asylum seekers
                  cap.truth = NA,
-                 cap.accuracy = NA, 
+                 cap.accuracy = NA,
+                 student.self=NA,
                  student.perception = NA, #international students 'enrich' Dutch universities
                  student.truth = NA, 
                  student.accuracy = NA, 
+                 threat.self = NA,
                  threat.perception = NA, #migration as a threat to Dutch culture
                  threat.truth = NA, 
                  threat.accuracy = NA)
@@ -672,10 +717,28 @@ for (i in unique(df$respnr)) {
   #give correct order (alter x first, then y)
   alterdata <- alterdata[c(which(alterdata$token==egodata$attribute_9),which(alterdata$token==egodata$attribute_10)),]
   
+  ### alter's own placement/opinion
+  df$LR.self[which(df$respnr==i)] <- as.numeric(stringr::str_extract(alterdata$P1, pattern = "\\(?[0-9,.]+\\)?"))
+  df$imp_crime.self[which(df$respnr==i)] <- alterdata$P2.SQ001.
+  df$imp_climate.self[which(df$respnr==i)] <- alterdata$P2.SQ002.
+  df$imp_discrim.self[which(df$respnr==i)] <- alterdata$P2.SQ003.
+  df$imp_housing.self[which(df$respnr==i)] <- alterdata$P2.SQ004.
+  df$imp_refugee.self[which(df$respnr==i)] <- alterdata$P2.SQ005.
+  df$sechand.self[which(df$respnr==i)] <- alterdata$C2.SQ001.
+  df$replace.self[which(df$respnr==i)] <- alterdata$C2.SQ002.
+  df$animal.self[which(df$respnr==i)] <- alterdata$C2.SQ003.
+  df$fly.self[which(df$respnr==i)] <- alterdata$C1.SQ001.
+  df$meat.self[which(df$respnr==i)] <- alterdata$C1.SQ002.
+  df$nature.self[which(df$respnr==i)] <- alterdata$C1.SQ003.
+  df$cap.self[which(df$respnr==i)] <- alterdata$M1.SQ001.
+  df$student.self[which(df$respnr==i)] <- alterdata$M1.SQ002.
+  df$threat.self[which(df$respnr==i)] <- alterdata$M1.SQ003.
+  
+  
   #### alter's perception of ego's position
   
   #LR
-  df$LR.percepton[which(df$respnr==i)] <- as.numeric(stringr::str_extract(alterdata$P1X, pattern = "\\(?[0-9,.]+\\)?"))
+  df$LR.perception[which(df$respnr==i)] <- as.numeric(stringr::str_extract(alterdata$P1X, pattern = "\\(?[0-9,.]+\\)?"))
   
   #importance of political topics
   df$imp_crime.perception[which(df$respnr==i)] <- alterdata$P2X.SQ001.
@@ -732,7 +795,7 @@ for (i in unique(df$respnr)) {
 df[,16:length(df)] <- lapply(names(df)[-c(1:15)], function(x) as.numeric(df[[x]]))
 
 {
-df$LR.accuracy <- 1-abs(df$LR.percepton-df$LR.truth)/11
+df$LR.accuracy <- 1-abs(df$LR.perception-df$LR.truth)/11
 df$imp_crime.accuracy <- 1-abs(df$imp_crime.perception-df$imp_crime.truth)/4
 df$imp_climate.accuracy <- 1-abs(df$imp_climate.perception-df$imp_climate.truth)/4
 df$imp_discrim.accuracy <- 1-abs(df$imp_discrim.perception-df$imp_discrim.truth)/4
@@ -770,7 +833,7 @@ df <- rbind(df.ego,df.alter)
 #reorder by ego id
 df <- df[order(df$respnr),]
 rownames(df) <- 1:nrow(df)
-
+#fix(df)
 ``` 
 
 <br>
@@ -786,7 +849,7 @@ fsave(df, "output.R")
 # Output
 
 ```{r, echo=FALSE}
-df <- fload("./data/processed/20230419output.R")
+df <- fload("./data/processed/20230511output.R")
 options(knitr.kable.NA='')
 
 knitr::kable(df, digit=2, "html", caption="Output") %>%
@@ -801,7 +864,7 @@ knitr::kable(df, digit=2, "html", caption="Output") %>%
 First description of reporting accuracy.
 
 ```{r, echo=FALSE}
-df <- fload("./data/processed/20230419output.R")
+df <- fload("./data/processed/20230511output.R")
 options(knitr.kable.NA='')
 
 tab <- as.data.frame(psych::describe(df[,which(grepl("accuracy", names(df)))]))
