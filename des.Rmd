@@ -87,7 +87,7 @@ colorize <- function(x, color) {sprintf("<span style='color: %s;'>%s</span>", co
 - `reshape2`
 - `lattice`
 
-```{r, echo=FALSE, warning=FALSE, results='hide'}
+```{r, warning=FALSE, results='hide'}
 packages = c("tidyverse", "ggplot2", "reshape2", "lattice")
 fpackage.check(packages)
 rm(packages)
@@ -146,6 +146,73 @@ data.1$Relationship <- ifelse(data.1$cdn==1, "Confidant", ifelse(data.1$study==1
 Does accuracy of estimating an alter's behavior/attitude depend on the type of relationship?
 
 
+We use three measures of accuracy:
+
+- continuous accuracy measure, abs(perception - truth) / range(item) (`accuracy`)
+
+two additional: 
+
+- dichotomous: does the perception and the self-report/truth fall on the same side of the midpoint of the scale? (`accuracy_side`)
+- dichotomous: does the perception precisely match the self-report/truth? (`accuracy_precise`)
+
+```{r}
+#accuracy side
+{
+data.1$LR.accuracy_side <- ifelse(( (data.1$LR.percepton %in% c(0:10)[1:round(length(c(0:10))/2)] & data.1$LR.truth %in% c(0:10)[1:round(length(c(0:10))/2)])
+                                    |(data.1$LR.percepton %in% c(0:10)[round(length(c(0:10))/2):11] & data.1$LR.truth %in%
+                                        c(0:10)[round(length(c(0:10))/2):11]) ) ,1,0)
+
+data.1$cap.accuracy_side <- ifelse( (data.1$cap.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$cap.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$cap.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$cap.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$fly.accuracy_side <- ifelse( (data.1$fly.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$fly.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$fly.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$fly.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$meat.accuracy_side <- ifelse( (data.1$meat.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$meat.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$meat.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$meat.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$animal.accuracy_side <- ifelse( (data.1$animal.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$animal.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$animal.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$animal.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$nature.accuracy_side <- ifelse( (data.1$nature.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$nature.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$nature.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$nature.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$replace.accuracy_side <- ifelse( (data.1$replace.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$replace.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$replace.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$replace.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$student.accuracy_side <- ifelse( (data.1$student.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$student.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$student.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$student.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$threat.accuracy_side <- ifelse( (data.1$threat.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$threat.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$threat.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$threat.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$sechand.accuracy_side <- ifelse( (data.1$sechand.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$sechand.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$sechand.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$sechand.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$imp_crime.accuracy_side <- ifelse( (data.1$imp_crime.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$imp_crime.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$imp_crime.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$imp_crime.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$imp_discrim.accuracy_side <- ifelse( (data.1$imp_discrim.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$imp_discrim.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$imp_discrim.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$imp_discrim.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$imp_housing.accuracy_side <- ifelse( (data.1$imp_housing.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$imp_housing.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$imp_housing.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$imp_housing.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$imp_refugee.accuracy_side <- ifelse( (data.1$imp_refugee.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$imp_refugee.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$imp_refugee.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$imp_refugee.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+data.1$imp_climate.accuracy_side <- ifelse( (data.1$imp_climate.perception %in% c(1:4)[1:(length(1:4)/2)] & data.1$imp_climate.truth %in% c(1:4)[1:(length(1:4)/2)] ) | 
+  (data.1$imp_climate.perception %in% c(1:4)[((length(1:4)/2)+1):4] & data.1$imp_climate.truth %in% c(1:4)[((length(1:4)/2)+1):4]), 1, 0)
+}
+
+#accuracy precise
+{
+data.1$LR.accuracy_precise <- ifelse(data.1$LR.percepton == data.1$LR.truth,1,0)
+data.1$cap.accuracy_precise <- ifelse(data.1$cap.perception == data.1$cap.truth,1,0)
+data.1$fly.accuracy_precise <- ifelse(data.1$fly.perception == data.1$fly.truth,1,0)
+data.1$meat.accuracy_precise <- ifelse(data.1$meat.perception == data.1$meat.truth,1,0)
+data.1$animal.accuracy_precise <- ifelse(data.1$animal.perception == data.1$animal.truth,1,0)
+data.1$nature.accuracy_precise <- ifelse(data.1$nature.perception == data.1$nature.truth,1,0)
+data.1$replace.accuracy_precise <- ifelse(data.1$replace.perception == data.1$replace.truth,1,0)
+data.1$student.accuracy_precise <- ifelse(data.1$student.perception == data.1$student.truth,1,0)
+data.1$threat.accuracy_precise <- ifelse(data.1$threat.perception == data.1$threat.truth,1,0)
+data.1$sechand.accuracy_precise <- ifelse(data.1$sechand.perception == data.1$sechand.truth,1,0)
+data.1$imp_crime.accuracy_precise <- ifelse(data.1$imp_crime.perception == data.1$imp_crime.truth,1,0)
+data.1$imp_discrim.accuracy_precise <- ifelse(data.1$imp_discrim.perception == data.1$imp_discrim.truth,1,0)
+data.1$imp_housing.accuracy_precise <- ifelse(data.1$imp_housing.perception == data.1$imp_housing.truth,1,0)
+data.1$imp_refugee.accuracy_precise <- ifelse(data.1$imp_refugee.perception == data.1$imp_refugee.truth,1,0)
+data.1$imp_climate.accuracy_precise <- ifelse(data.1$imp_climate.perception == data.1$imp_climate.truth,1,0)
+}
+```
+
+
 ```{r, fig.width=12, fig.height=8}
 #plotting data
 df <- rbind(
@@ -156,7 +223,7 @@ df <- rbind(
 )
 
 # Reshape the data from wide to long format
-df_long <- df %>% pivot_longer(-Relationship, names_to = "variable", values_to = "value")
+df_long <- df[,c(1:16)] %>% pivot_longer(-Relationship, names_to = "variable", values_to = "value")
 
 # Convert the variable column to a factor with a specific order
 df_long$variable <- factor(df_long$variable, levels = c("LR.accuracy", "imp_crime.accuracy", "imp_climate.accuracy", "imp_discrim.accuracy", "imp_housing.accuracy", "imp_refugee.accuracy", "sechand.accuracy", "replace.accuracy", "animal.accuracy", "fly.accuracy", "meat.accuracy", "nature.accuracy", "cap.accuracy", "student.accuracy", "threat.accuracy"))
@@ -213,9 +280,154 @@ print(p)
 
 ```
   
-  
-  
+
+
 <br>
+
+## different accuracy calculation {.tabset .tabset-fade} 
+
+Accuracy has no clear relationship with relationship type. Let's try different operationalizations of 'accuracy':
+
+1. does the perception and the self-report/truth fall on the same side of the midpoint of the scale? (`accuracy_side`)
+2. does the perception precisely match the self-report/truth? (`accuracy_precise`)
+
+### accuracy_side
+
+```{r, fig.width=12, fig.height=8, collapse=TRUE}
+#plotting data
+df <- rbind(
+  data.1[which(data.1$Relationship=="Confidant"), c(64, which(grepl( "accuracy_side", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(64, which(grepl( "accuracy_side", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(64, which(grepl( "accuracy_side", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(64, which(grepl( "accuracy_side", names(data.1))))]
+)
+
+# Reshape the data from wide to long format
+df_long <- df %>% pivot_longer(-Relationship, names_to = "variable", values_to = "value")
+
+# Convert the variable column to a factor with a specific order
+df_long$variable <- factor(df_long$variable, levels = c("LR.accuracy_side", "imp_crime.accuracy_side", "imp_climate.accuracy_side", "imp_discrim.accuracy_side", "imp_housing.accuracy_side", "imp_refugee.accuracy_side", "sechand.accuracy_side", "replace.accuracy_side", "animal.accuracy_side", "fly.accuracy_side", "meat.accuracy_side", "nature.accuracy_side", "cap.accuracy_side", "student.accuracy_side", "threat.accuracy_side"))
+
+#add n and prop. to relationship label, for the plot.
+df_long$RelationshipLab <- ifelse(df_long$Relationship=="Confidant", 
+                                  paste0("Confidant (n=", length(which(data.1$Relationship=="Confidant")), "; ", round(length(which(data.1$Relationship=="Confidant")) / nrow(data.1) *100,2), "%)"),
+                                 ifelse(df_long$Relationship=="Study partner", 
+                                        paste0("Study partner (n=", length(which(data.1$Relationship=="Study partner")), "; ", round(length(which(data.1$Relationship=="Study partner")) / nrow(data.1) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Best Friend", 
+                                        paste0("Best Friend (n=", length(which(data.1$Relationship=="Best Friend")), "; ", round(length(which(data.1$Relationship=="Best Friend")) / nrow(data.1) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Sports partner", 
+                                        paste0("Sports partner (n=", length(which(data.1$Relationship=="Sports partner")), "; ", round(length(which(data.1$Relationship=="Sports partner")) / nrow(data.1) *100,2), "%)"), NA))))
+
+# Calculate proportion of 'accurates_sides' for each item and group
+prop_df <- aggregate(value ~ variable + RelationshipLab, data = df_long, FUN = mean)
+
+# Create stacked bar chart
+p <- ggplot(prop_df, aes(x = variable, y = value, fill = variable))
+p <- p + geom_bar(stat = "identity")
+p <- p + facet_wrap (~ RelationshipLab, ncol = 2)
+
+# add x and y axis labels and a plot title
+p <- p + labs(x = "Item", y = "Proportion accurate_side", title = paste0("Proportion accurate_side placement across multiple items, by (monoplex) relationship type (n=", nrow(data.1), ")."))
+
+# Add horizontal line at 0.5
+p <- p + geom_hline(yintercept = 0.5, linetype = "dashed", color = "black")
+
+# Add labels above each bar
+p <- p + geom_text(aes(label = round(value, 2)), position = position_stack(vjust = .9))
+
+# Adjust the legend position and title
+p <- p + theme(legend.position = "right", legend.title = element_blank())
+
+# remove x axis label
+p <- p + scale_x_discrete(labels = NULL)
+
+#adjust title text size
+p <- p + theme(
+  plot.title = element_text(size=16, face="bold"),
+  plot.subtitle = element_text(size = 12),
+  strip.text = element_text(size = 16),
+  legend.text = element_text(size = 12),
+  axis.title.y= element_text(size = 16),
+  axis.title.x= element_text(size = 16),
+  plot.caption = element_text(size = 12),
+)
+
+#last, give custom labels for the items
+p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  ))
+
+print(p)
+
+```
+  
+### accuracy_precise  
+  
+```{r, fig.width=12, fig.height=8}
+#plotting data
+df <- rbind(
+  data.1[which(data.1$Relationship=="Confidant"), c(64, which(grepl( "accuracy_precise", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(64, which(grepl( "accuracy_precise", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(64, which(grepl( "accuracy_precise", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(64, which(grepl( "accuracy_precise", names(data.1))))]
+)
+
+# Reshape the data from wide to long format
+df_long <- df %>% pivot_longer(-Relationship, names_to = "variable", values_to = "value")
+
+# Convert the variable column to a factor with a specific order
+df_long$variable <- factor(df_long$variable, levels = c("LR.accuracy_precise", "imp_crime.accuracy_precise", "imp_climate.accuracy_precise", "imp_discrim.accuracy_precise", "imp_housing.accuracy_precise", "imp_refugee.accuracy_precise", "sechand.accuracy_precise", "replace.accuracy_precise", "animal.accuracy_precise", "fly.accuracy_precise", "meat.accuracy_precise", "nature.accuracy_precise", "cap.accuracy_precise", "student.accuracy_precise", "threat.accuracy_precise"))
+
+#add n and prop. to relationship label, for the plot.
+df_long$RelationshipLab <- ifelse(df_long$Relationship=="Confidant", 
+                                  paste0("Confidant (n=", length(which(data.1$Relationship=="Confidant")), "; ", round(length(which(data.1$Relationship=="Confidant")) / nrow(data.1) *100,2), "%)"),
+                                 ifelse(df_long$Relationship=="Study partner", 
+                                        paste0("Study partner (n=", length(which(data.1$Relationship=="Study partner")), "; ", round(length(which(data.1$Relationship=="Study partner")) / nrow(data.1) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Best Friend", 
+                                        paste0("Best Friend (n=", length(which(data.1$Relationship=="Best Friend")), "; ", round(length(which(data.1$Relationship=="Best Friend")) / nrow(data.1) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Sports partner", 
+                                        paste0("Sports partner (n=", length(which(data.1$Relationship=="Sports partner")), "; ", round(length(which(data.1$Relationship=="Sports partner")) / nrow(data.1) *100,2), "%)"), NA))))
+
+# Calculate proportion of 'accurates_sides' for each item and group
+prop_df <- aggregate(value ~ variable + RelationshipLab, data = df_long, FUN = mean)
+
+# Create stacked bar chart
+p <- ggplot(prop_df, aes(x = variable, y = value, fill = variable))
+p <- p + geom_bar(stat = "identity")
+p <- p + facet_wrap (~ RelationshipLab, ncol = 2)
+
+# add x and y axis labels and a plot title
+p <- p + labs(x = "Item", y = "Proportion accurate_precise", title = paste0("Proportion accurate_precise placement across multiple items, by (monoplex) relationship type (n=", nrow(data.1), ")."))
+
+# Add horizontal line at 0.5
+p <- p + geom_hline(yintercept = 0.5, linetype = "dashed", color = "black")
+
+# Add labels above each bar
+p <- p + geom_text(aes(label = round(value, 2)), position = position_stack(vjust = .9))
+
+# Adjust the legend position and title
+p <- p + theme(legend.position = "right", legend.title = element_blank())
+
+# remove x axis label
+p <- p + scale_x_discrete(labels = NULL)
+
+#adjust title text size
+p <- p + theme(
+  plot.title = element_text(size=16, face="bold"),
+  plot.subtitle = element_text(size = 12),
+  strip.text = element_text(size = 16),
+  legend.text = element_text(size = 12),
+  axis.title.y= element_text(size = 16),
+  axis.title.x= element_text(size = 16),
+  plot.caption = element_text(size = 12),
+)
+
+#last, give custom labels for the items
+p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  ))
+
+print(p)
+
+```
+## {.unlisted .unnumbered}
+
 
 # Embeddedness
 
@@ -271,5 +483,108 @@ print(p)
 ```
 
 
+## different accuracy calculation {.tabset .tabset-fade} 
 
+
+### accuracy_side
+```{r, fig.width=12, fig.height=8}
+
+#exclude cases with NA on embeddedness (i.e., alter responses)
+df <- data.1[which(!is.na(data.1$embeddedness)),]
+#nrow(df) #164 ego-alter dyads
+
+#subset accuracy measures, relationship type, embeddedness and respnr
+#names(df)
+df <- df[,c(1,16,64,which(grepl("accuracy_side", names(df))))]
+
+# Reshape the data from wide to long format
+df_long <- df %>% pivot_longer(-c(Relationship, embeddedness, respnr), names_to = "variable", values_to = "value")
+
+#add n and prop. to relationship label, for the plot.
+df_long$RelationshipLab <- ifelse(df_long$Relationship=="Confidant", 
+                                  paste0("Confidant (n=", length(which(df$Relationship=="Confidant")), "; ", round(length(which(df$Relationship=="Confidant")) / nrow(df) *100,2), "%)"),
+                                 ifelse(df_long$Relationship=="Study partner", 
+                                        paste0("Study partner (n=", length(which(df$Relationship=="Study partner")), "; ", round(length(which(df$Relationship=="Study partner")) / nrow(df) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Best Friend", 
+                                        paste0("Best Friend (n=", length(which(df$Relationship=="Best Friend")), "; ", round(length(which(df$Relationship=="Best Friend")) / nrow(df) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Sports partner", 
+                                        paste0("Sports partner (n=", length(which(df$Relationship=="Sports partner")), "; ", round(length(which(df$Relationship=="Sports partner")) / nrow(df) *100,2), "%)"), NA))))
+
+#plot
+p <- ggplot(df_long, aes(x = embeddedness, y = value))
   
+#add scatterplot and logistic line
+p <- p + geom_point() + geom_smooth(method = "glm", se = FALSE, method.args = list(family = "binomial"))
+#?geom_smooth
+
+#add facets by relationship
+p <- p + facet_wrap(.~ RelationshipLab)
+
+p <- p + labs(x = "Structural embeddedness (0-1)", y = "Accuracy_side (0, 1)", title = "Relation between alter's structural embeddedness and ego's accuracy_side,\nby (monoplex) relationship type (n=164)." , subtitle = "Scatterplot and GLM line")
+
+#title
+p <- p + theme(
+  plot.title = element_text(size=16, face="bold"),
+  plot.subtitle = element_text(size = 12),
+  strip.text = element_text(size = 16),
+  legend.text = element_text(size = 12),
+  axis.title.y= element_text(size = 16),
+  axis.title.x= element_text(size = 16),
+  plot.caption = element_text(size = 12),
+)
+
+print(p)
+```
+
+### accuracy_precise
+```{r, fig.width=12, fig.height=8}
+
+#exclude cases with NA on embeddedness (i.e., alter responses)
+df <- data.1[which(!is.na(data.1$embeddedness)),]
+#nrow(df) #164 ego-alter dyads
+
+#subset accuracy measures, relationship type, embeddedness and respnr
+#names(df)
+df <- df[,c(1,16,64,which(grepl("accuracy_precise", names(df))))]
+
+# Reshape the data from wide to long format
+df_long <- df %>% pivot_longer(-c(Relationship, embeddedness, respnr), names_to = "variable", values_to = "value")
+
+#add n and prop. to relationship label, for the plot.
+df_long$RelationshipLab <- ifelse(df_long$Relationship=="Confidant", 
+                                  paste0("Confidant (n=", length(which(df$Relationship=="Confidant")), "; ", round(length(which(df$Relationship=="Confidant")) / nrow(df) *100,2), "%)"),
+                                 ifelse(df_long$Relationship=="Study partner", 
+                                        paste0("Study partner (n=", length(which(df$Relationship=="Study partner")), "; ", round(length(which(df$Relationship=="Study partner")) / nrow(df) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Best Friend", 
+                                        paste0("Best Friend (n=", length(which(df$Relationship=="Best Friend")), "; ", round(length(which(df$Relationship=="Best Friend")) / nrow(df) *100,2), "%)"),
+                                                                         ifelse(df_long$Relationship=="Sports partner", 
+                                        paste0("Sports partner (n=", length(which(df$Relationship=="Sports partner")), "; ", round(length(which(df$Relationship=="Sports partner")) / nrow(df) *100,2), "%)"), NA))))
+
+#plot
+p <- ggplot(df_long, aes(x = embeddedness, y = value))
+  
+#add scatterplot and logistic line
+p <- p + geom_point() + geom_smooth(method = "glm", se = FALSE, method.args = list(family = "binomial"))
+#?geom_smooth
+
+#add facets by relationship
+p <- p + facet_wrap(.~ RelationshipLab)
+
+p <- p + labs(x = "Structural embeddedness (0-1)", y = "Accuracy_precise (0, 1)", title = "Relation between alter's structural embeddedness and ego's accuracy_precise,\nby (monoplex) relationship type (n=164)." , subtitle = "Scatterplot and GLM line")
+
+#title
+p <- p + theme(
+  plot.title = element_text(size=16, face="bold"),
+  plot.subtitle = element_text(size = 12),
+  strip.text = element_text(size = 16),
+  legend.text = element_text(size = 12),
+  axis.title.y= element_text(size = 16),
+  axis.title.x= element_text(size = 16),
+  plot.caption = element_text(size = 12),
+)
+
+print(p)
+```
+
+## {.unlisted .unnumbered}
+
