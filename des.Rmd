@@ -99,13 +99,13 @@ rm(packages)
 
 Load in the replicated data-set. You may have to adjust the date...
 
-You may also obtain it by downloading: `r xfun::embed_file("./data shared/output.R")`
+You may also obtain it by downloading: `r xfun::embed_file("./data shared/output.RDa")`
 
 
 ```{r}
 #today <- substr(gsub("[:-]", "", Sys.time()), 1, 8) #get todays date
 today <- "20230511" 
-data <- fload(paste0("./data/processed/", today, "output.R"))
+data <- fload(paste0("./data/processed/", today, "output.RDa"))
 ```
 
 
@@ -114,7 +114,7 @@ data <- fload(paste0("./data/processed/", today, "output.R"))
 length(unique(data$respnr))
 
 #235 responses from ego (about alters), 235 responses from alter (about ego)
-table(data$response)
+table(data$ego)
 ```
 
 
@@ -214,10 +214,10 @@ data.1$imp_climate.accuracy_precise <- ifelse(data.1$imp_climate.perception == d
 ```{r fig.height=8, fig.width=12}
 #plotting data
 df <- rbind(
-  data.1[which(data.1$Relationship=="Confidant"), c(79, which(grepl( "accuracy", names(data.1))))],
-  data.1[which(data.1$Relationship=="Study partner"), c(79, which(grepl( "accuracy", names(data.1))))],
-  data.1[which(data.1$Relationship=="Best Friend"), c(79, which(grepl( "accuracy", names(data.1))))],
-  data.1[which(data.1$Relationship=="Sports partner"), c(79, which(grepl( "accuracy", names(data.1))))]
+  data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( "accuracy", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(81, which(grepl( "accuracy", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(81, which(grepl( "accuracy", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(81, which(grepl( "accuracy", names(data.1))))]
 )
 
 # Reshape the data from wide to long format
@@ -270,7 +270,6 @@ p <- p + theme(
   plot.caption = element_text(size = 12),
 )
 
-
 #last, give custom labels for the items
 p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  ))
 
@@ -294,10 +293,10 @@ Accuracy has no clear relationship with relationship type. Let's try different o
 ```{r, fig.width=12, fig.height=8, collapse=TRUE}
 #plotting data
 df <- rbind(
-  data.1[which(data.1$Relationship=="Confidant"), c(79, which(grepl( "accuracy_side", names(data.1))))],
-  data.1[which(data.1$Relationship=="Study partner"), c(79, which(grepl( "accuracy_side", names(data.1))))],
-  data.1[which(data.1$Relationship=="Best Friend"), c(79, which(grepl( "accuracy_side", names(data.1))))],
-  data.1[which(data.1$Relationship=="Sports partner"), c(79, which(grepl( "accuracy_side", names(data.1))))]
+  data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( "accuracy_side", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(81, which(grepl( "accuracy_side", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(81, which(grepl( "accuracy_side", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(81, which(grepl( "accuracy_side", names(data.1))))]
 )
 
 # Reshape the data from wide to long format
@@ -362,10 +361,10 @@ print(p)
 ```{r, fig.width=12, fig.height=8}
 #plotting data
 df <- rbind(
-  data.1[which(data.1$Relationship=="Confidant"), c(79, which(grepl( "accuracy_precise", names(data.1))))],
-  data.1[which(data.1$Relationship=="Study partner"), c(79, which(grepl( "accuracy_precise", names(data.1))))],
-  data.1[which(data.1$Relationship=="Best Friend"), c(79, which(grepl( "accuracy_precise", names(data.1))))],
-  data.1[which(data.1$Relationship=="Sports partner"), c(79, which(grepl( "accuracy_precise", names(data.1))))]
+  data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( "accuracy_precise", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(81, which(grepl( "accuracy_precise", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(81, which(grepl( "accuracy_precise", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(81, which(grepl( "accuracy_precise", names(data.1))))]
 )
 
 # Reshape the data from wide to long format
@@ -424,6 +423,7 @@ p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Politica
 print(p)
 
 ```
+
 ## {.unlisted .unnumbered}
 
 
@@ -439,7 +439,7 @@ df <- data.1[which(!is.na(data.1$embeddedness)),]
 
 #subset accuracy measures, relationship type, embeddedness and respnr
 #names(df)
-df <- df[,c(1,16,79,which(grepl("accuracy", names(df))))]
+df <- df[,c(1,19,81,which(grepl("accuracy", names(df))))]
 
 # Reshape the data from wide to long format
 df_long <- df %>% pivot_longer(-c(Relationship, embeddedness, respnr), names_to = "variable", values_to = "value")
@@ -493,7 +493,7 @@ df <- data.1[which(!is.na(data.1$embeddedness)),]
 
 #subset accuracy measures, relationship type, embeddedness and respnr
 #names(df)
-df <- df[,c(1,16,79,which(grepl("accuracy_side", names(df))))]
+df <- df[,c(1,19,81,which(grepl("accuracy_side", names(df))))]
 
 # Reshape the data from wide to long format
 df_long <- df %>% pivot_longer(-c(Relationship, embeddedness, respnr), names_to = "variable", values_to = "value")
@@ -543,7 +543,7 @@ df <- data.1[which(!is.na(data.1$embeddedness)),]
 
 #subset accuracy measures, relationship type, embeddedness and respnr
 #names(df)
-df <- df[,c(1,16,79,which(grepl("accuracy_precise", names(df))))]
+df <- df[,c(1,19,81,which(grepl("accuracy_precise", names(df))))]
 
 # Reshape the data from wide to long format
 df_long <- df %>% pivot_longer(-c(Relationship, embeddedness, respnr), names_to = "variable", values_to = "value")
@@ -614,14 +614,14 @@ data.1$threat.sim <- 1 - abs(data.1$threat.self-data.1$threat.truth)/3
 
 #plotting data
 df <- rbind(
-  data.1[which(data.1$Relationship=="Confidant"), c(79, which(grepl( ".sim", names(data.1))))],
-  data.1[which(data.1$Relationship=="Study partner"), c(79, which(grepl( ".sim", names(data.1))))],
-  data.1[which(data.1$Relationship=="Best Friend"), c(79, which(grepl( ".sim", names(data.1))))],
-  data.1[which(data.1$Relationship=="Sports partner"), c(79, which(grepl( ".sim", names(data.1))))]
+  data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( ".sim", names(data.1))))],
+  data.1[which(data.1$Relationship=="Study partner"), c(81, which(grepl( ".sim", names(data.1))))],
+  data.1[which(data.1$Relationship=="Best Friend"), c(81, which(grepl( ".sim", names(data.1))))],
+  data.1[which(data.1$Relationship=="Sports partner"), c(81, which(grepl( ".sim", names(data.1))))]
 )
 #fix(df)
 # Reshape the data from wide to long format
-df_long <- df[,c(1:16)] %>% pivot_longer(-Relationship, names_to = "variable", values_to = "value")
+df_long <- df %>% pivot_longer(-Relationship, names_to = "variable", values_to = "value")
 
 # Convert the variable column to a factor with a specific order
 df_long$variable <- factor(df_long$variable, levels = c("LR.sim", "imp_crime.sim", "imp_climate.sim", "imp_discrim.sim", "imp_housing.sim", "imp_refugee.sim", "sechand.sim", "replace.sim", "animal.sim", "fly.sim", "meat.sim", "nature.sim", "cap.sim", "student.sim", "threat.sim"))

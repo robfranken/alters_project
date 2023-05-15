@@ -207,7 +207,7 @@ dat <- fload("./data/data_public.R")
 
 # Make data-set
 
-In case you don't wish to replicate the data-set, you may obtain it by downloading: `r xfun::embed_file("./data shared/output.R")`
+In case you don't wish to replicate the data-set, you may obtain it by downloading: `r xfun::embed_file("./data shared/output.rda")`
 
 ## accuracy from ego's perspective
 
@@ -223,6 +223,9 @@ ego <- ego[which(ego$lastpage>13),]
 
 #make an (empty) dataframe to store output in, with a row for each alter of ego
 df <- data.frame(respnr = alter$respnr,
+                 dyad = NA,
+                 tie = NA,
+                 ego = "ego",
                  
                  #ego characteristics
                  ego_gender = NA,
@@ -357,7 +360,8 @@ alter[alter=="Niet belangrijk"] <- 1
 
 for (i in unique(df$respnr)) {
  
- ## unique(df$respnr)[24]->i
+ ## unique(df$respnr)[7]->i
+
 #  print(i)
   
   #get egodata corresponding to i
@@ -377,8 +381,12 @@ for (i in unique(df$respnr)) {
   
   #take the row(s) corresponding to the selected alter(s) that participated 
   data <- data[which(data$token %in% c(egodata$attribute_9, egodata$attribute_10)[ind]),]
-
-  ######
+  
+  #give dyad id (i.e., ego-alter dyad of ego-alterx and ego-altery)
+  df$dyad[which(df$respnr==i)] <-  as.numeric(c(paste0(1000 + df$respnr[which(df$respnr==i)][1], "1"), paste0(1000 + df$respnr[which(df$respnr==i)][1], "2")) )[ind]
+  
+  #also a tie id (giving direction); here, everything is from ego's perspective. I add a "1" to indicate this ("2") for alter perspective
+  df$tie[which(df$respnr==i)] <- as.numeric(paste0(df$dyad[which(df$respnr==i)], "1"))
   
   #ego covars
   df$ego_gender[which(df$respnr==i)] <-  data$ego_gender[1]
@@ -392,6 +400,7 @@ for (i in unique(df$respnr)) {
   
   #dyad
   df$duration[which(df$respnr==i)] <- data$duration
+  #@RF. add closeness/frequency
 
   #same
   df$same_gender[which(df$respnr==i)] <- data$same_gender
@@ -531,7 +540,7 @@ for (i in unique(df$respnr)) {
 #1-(|perception-truth|/range)
 
 #but first, convert positions to numeric
-df[,17:length(df)] <- lapply(names(df)[-c(1:16)], function(x) as.numeric(df[[x]]))
+df[,20:length(df)] <- lapply(names(df)[-c(1:19)], function(x) as.numeric(df[[x]]))
 
 {
 df$LR.accuracy <- 1-abs(df$LR.perception-df$LR.truth)/11
@@ -553,6 +562,7 @@ df$threat.accuracy <- 1-abs(df$threat.perception-df$threat.truth)/4
 
 df.ego <- df
 rm(df)
+#fix(df.ego)
 ```
 
 <br>
@@ -568,6 +578,9 @@ Embeddedness, or ego's popularity in alter's network cannot be calculated, since
 #make an (empty) dataframe to store output in, with a row for each alter-ego dyad
 
 df <- data.frame(respnr = alter$respnr,
+                 dyad = NA,
+                 tie = NA,
+                 ego = "alter",
                  
                  #ego characteristics
                  ego_gender = NA,
@@ -592,8 +605,11 @@ df <- data.frame(respnr = alter$respnr,
                  
                  #dyad
                  duration = NA,
-              
-  #### opionions ######
+                 
+                 #structure
+                 embeddedness = NA,
+                 
+                 #### opionions ######
                  
                  #left right placement
                  LR.self = NA,
@@ -701,6 +717,7 @@ df$study <- df.ego$study
 df$bff <- df.ego$bff
 df$csn <- df.ego$csn
 
+df$dyad <- df.ego$dyad
 
 for (i in unique(df$respnr)) {
   #unique(df$respnr)[10]->i
@@ -716,6 +733,8 @@ for (i in unique(df$respnr)) {
   
   #give correct order (alter x first, then y)
   alterdata <- alterdata[c(which(alterdata$token==egodata$attribute_9),which(alterdata$token==egodata$attribute_10)),]
+  
+  df$tie[which(df$respnr==i)] <- as.numeric(paste0(df$dyad[which(df$respnr==i)], "2"))
   
   ### alter's own placement/opinion
   df$LR.self[which(df$respnr==i)] <- as.numeric(stringr::str_extract(alterdata$P1, pattern = "\\(?[0-9,.]+\\)?"))
@@ -792,7 +811,7 @@ for (i in unique(df$respnr)) {
 #1-(|perception-truth|/range)
 #names(df)
 #but first, convert positions to numeric
-df[,16:length(df)] <- lapply(names(df)[-c(1:15)], function(x) as.numeric(df[[x]]))
+df[,20:length(df)] <- lapply(names(df)[-c(1:19)], function(x) as.numeric(df[[x]]))
 
 {
 df$LR.accuracy <- 1-abs(df$LR.perception-df$LR.truth)/11
@@ -823,15 +842,11 @@ rm(df)
 ### rbind data-frames
 
 ```{r,eval=F}
-#add a column indicating whether it is the ego or alter response/perspective
-df.ego$response = "ego"
-df.alter$response = "alter"
-
 df.alter$embeddedness <- NA
 df <- rbind(df.ego,df.alter)
 
 #reorder by ego id
-df <- df[order(df$respnr),]
+df <- df[order(df$dyad),]
 rownames(df) <- 1:nrow(df)
 #fix(df)
 ``` 
@@ -841,7 +856,7 @@ rownames(df) <- 1:nrow(df)
 ## save
 
 ```{r,eval=F}
-fsave(df, "output.R")
+fsave(df, "output.rda")
 ```
 
 <br>
@@ -849,7 +864,7 @@ fsave(df, "output.R")
 # Output
 
 ```{r, echo=FALSE}
-df <- fload("./data/processed/20230511output.R")
+df <- fload("./data/processed/20230511output.Rda")
 options(knitr.kable.NA='')
 
 knitr::kable(df, digit=2, "html", caption="Output") %>%
