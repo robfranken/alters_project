@@ -49,6 +49,8 @@ gc()
 - `fpackage.check`: Check if packages are installed (and install if not) in R
 - `fsave`: Function to save data with time stamp in correct directory
 - `fload`: Function to load R-objects under new names
+- `flegend`: add common legend to combined ggplot2 ([source](https://www.geeksforgeeks.org/add-common-legend-to-combined-ggplot2-plots-in-r/)).
+
 
 ```{r}
 fpackage.check <- function(packages) {
@@ -75,6 +77,22 @@ fload  <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
+flegend <- function(plot) {
+	
+# get tabular interpretation of plot
+plot_table <- ggplot_gtable(ggplot_build(plot))
+	
+# Mark only legend in plot
+legend_plot <- which(sapply(plot_table$grobs, function(x) x$name) == "guide-box")
+							
+# extract legend
+legend <- plot_table$grobs[[legend_plot]]
+							
+# return legend
+return(legend)
+}
+
+
 colorize <- function(x, color) {sprintf("<span style='color: %s;'>%s</span>", color, x) }
 ```
 
@@ -86,9 +104,10 @@ colorize <- function(x, color) {sprintf("<span style='color: %s;'>%s</span>", co
 - `ggplot2`
 - `reshape2`
 - `lattice`
+- `RColorBrewer`
 
 ```{r, warning=FALSE, results='hide'}
-packages = c("tidyverse", "ggplot2", "reshape2", "lattice")
+packages = c("tidyverse", "ggplot2", "reshape2", "lattice", "RColorBrewer")
 fpackage.check(packages)
 rm(packages)
 ```
@@ -211,7 +230,8 @@ data.1$imp_climate.accuracy_precise <- ifelse(data.1$imp_climate.perception == d
 ```
 
 
-```{r fig.height=8, fig.width=12}
+```{r  fig.width=12, fig.height=8}
+
 #plotting data
 df <- rbind(
   data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( "accuracy", names(data.1))))],
@@ -290,7 +310,7 @@ Accuracy has no clear relationship with relationship type. Let's try different o
 
 ### accuracy_side
 
-```{r, fig.width=12, fig.height=8, collapse=TRUE}
+```{r  fig.width=12, fig.height=8}
 #plotting data
 df <- rbind(
   data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( "accuracy_side", names(data.1))))],
@@ -358,7 +378,7 @@ print(p)
   
 ### accuracy_precise  
   
-```{r, fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8}
 #plotting data
 df <- rbind(
   data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( "accuracy_precise", names(data.1))))],
@@ -432,7 +452,7 @@ print(p)
 Relation between embeddedness and accuracy, across (monoplex) relationship types
 
 
-```{r, fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8}
 #exclude cases with NA on embeddedness (i.e., alter responses)
 df <- data.1[which(!is.na(data.1$embeddedness)),]
 #nrow(df) #164 ego-alter dyads
@@ -485,7 +505,7 @@ print(p)
 
 
 ### accuracy_side
-```{r, fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8}
 
 #exclude cases with NA on embeddedness (i.e., alter responses)
 df <- data.1[which(!is.na(data.1$embeddedness)),]
@@ -535,7 +555,7 @@ print(p)
 ```
 
 ### accuracy_precise
-```{r, fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8}
 
 #exclude cases with NA on embeddedness (i.e., alter responses)
 df <- data.1[which(!is.na(data.1$embeddedness)),]
@@ -592,7 +612,7 @@ print(p)
 
 Does similarity/agreement differ across relationship types?
 
-```{r, fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8}
 #same violin plot, but replace accuracy with (dis)similarity
 
 #similarity = 1- ( |self-report - truth|)/range
@@ -679,6 +699,143 @@ print(p)
 ```
 
 
-Relation between similarity and accuracy across relationship types?
+To-do: check with binary outcome (`accuracy_side` and `accuracy_precise`).
 
+<br>
+
+# outcomes
+
+```{r, echo=FALSE}
+#self-report (dis)agreement / perceptional (dis)agreement; 2x2
+matrix <- matrix(NA, 2,2)
+rownames(matrix) <- c("Self-report agreement", "Self-report disagreement")
+colnames(matrix) <- c("Perceived agreement", "Perceived disagreement")
+
+matrix[1,1] <- "Aware of agreement"
+matrix[1,2] <- "False uniqueness"
+matrix[2,1] <- "False consensus"
+matrix[2,2] <- "Aware of disagreement"
+
+options(knitr.kable.NA='')
+knitr::kable(matrix, "html", caption = "Concept matrix") %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+
+```{r  fig.width=12, fig.height=8}
+#dataframe: outcome counts, per item, nested in groups/themes
+dat <- data.frame(group=rep(c("eco-friendly actions", "climate policy", "migration policy"),each=12),
+           item=rep(c("Buying second-hand products", "Minimize item replacement", "Consuming less animal products", "Flight tax", "Meat tax", "Expanding nature reserves", "Annual refugee admissions cap", "Foreign students enrich Dutch universities", "Migrant arrival threatens Dutch culture"),each=4),
+           outcome = c("Aware of agreement", "False uniqueness", "False consensus",  "Aware of disagreement"), n=NA)
+
+#counts
+{
+dat$n[which(dat$item=="Buying second-hand products")] <- ifelse(dat$outcome=="Aware of agreement", length(which((data.1$sechand.self %in% c(1,2) & data.1$sechand.truth %in% c(1,2) & data.1$sechand.perception %in% c(1,2)) | (data.1$sechand.self %in% c(3,4) & data.1$sechand.truth %in% c(3,4) & data.1$sechand.perception %in% c(3,4)))),ifelse(dat$outcome=="False consensus", length(which((data.1$sechand.self %in% c(1,2) & data.1$sechand.truth %in% c(3,4) & data.1$sechand.perception %in% c(1,2)) | (data.1$sechand.self %in% c(3,4) & data.1$sechand.truth %in% c(1,2) & data.1$sechand.perception %in% c(3,4)))),ifelse(dat$outcome=="False uniqueness", length(which((data.1$sechand.self %in% c(1,2) & data.1$sechand.truth %in% c(1,2) & data.1$sechand.perception %in% c(3,4)) | (data.1$sechand.self %in% c(3,4) & data.1$sechand.truth %in% c(3,4) & data.1$sechand.perception %in% c(1,2)))),ifelse(dat$outcome=="Aware of disagreement", length(which((data.1$sechand.self %in% c(1,2) & data.1$sechand.truth %in% c(3,4) & data.1$sechand.perception %in% c(3,4)) | (data.1$sechand.self %in% c(3,4) & data.1$sechand.truth %in% c(1,2) & data.1$sechand.perception %in% c(1,2)))), NA ))))
+
+dat$n[which(dat$item=="Consuming less animal products")] <- ifelse(dat$outcome=="Aware of agreement", length(which((data.1$animal.self %in% c(1,2) & data.1$animal.truth %in% c(1,2) & data.1$animal.perception %in% c(1,2)) | (data.1$animal.self %in% c(3,4) & data.1$animal.truth %in% c(3,4) & data.1$animal.perception %in% c(3,4)))), ifelse(dat$outcome=="False consensus", length(which((data.1$animal.self %in% c(1,2) & data.1$animal.truth %in% c(3,4) & data.1$animal.perception %in% c(1,2)) | (data.1$animal.self %in% c(3,4) & data.1$animal.truth %in% c(1,2) & data.1$animal.perception %in% c(3,4)))), ifelse(dat$outcome=="False uniqueness", length(which((data.1$animal.self %in% c(1,2) & data.1$animal.truth %in% c(1,2) & data.1$animal.perception %in% c(3,4)) | (data.1$animal.self %in% c(3,4) & data.1$animal.truth %in% c(3,4) & data.1$animal.perception %in% c(1,2)))), ifelse(dat$outcome=="Aware of disagreement", length(which((data.1$animal.self %in% c(1,2) & data.1$animal.truth %in% c(3,4) & data.1$animal.perception %in% c(3,4)) | (data.1$animal.self %in% c(3,4) & data.1$animal.truth %in% c(1,2) & data.1$animal.perception %in% c(1,2)))), NA ))))
+
+dat$n[which(dat$item=="Minimize item replacement")] <- ifelse(dat$outcome=="Aware of agreement", length(which((data.1$replace.self %in% c(1,2) & data.1$replace.truth %in% c(1,2) & data.1$replace.perception %in% c(1,2)) | (data.1$replace.self %in% c(3,4) & data.1$replace.truth %in% c(3,4) & data.1$replace.perception %in% c(3,4)))), ifelse(dat$outcome=="False consensus", length(which((data.1$replace.self %in% c(1,2) & data.1$replace.truth %in% c(3,4) & data.1$replace.perception %in% c(1,2)) | (data.1$replace.self %in% c(3,4) & data.1$replace.truth %in% c(1,2) & data.1$replace.perception %in% c(3,4)))), ifelse(dat$outcome=="False uniqueness", length(which((data.1$replace.self %in% c(1,2) & data.1$replace.truth %in% c(1,2) & data.1$replace.perception %in% c(3,4)) | (data.1$replace.self %in% c(3,4) & data.1$replace.truth %in% c(3,4) & data.1$replace.perception %in% c(1,2)))), ifelse(dat$outcome=="Aware of disagreement", length(which((data.1$replace.self %in% c(1,2) & data.1$replace.truth %in% c(3,4) & data.1$replace.perception %in% c(3,4)) | (data.1$replace.self %in% c(3,4) & data.1$replace.truth %in% c(1,2) & data.1$replace.perception %in% c(1,2)))), NA ))))
+
+dat$n[which(dat$item=="Flight tax")] <- ifelse(dat$outcome=="Aware of agreement", length(which((data.1$fly.self %in% c(1,2) & data.1$fly.truth %in% c(1,2) & data.1$fly.perception %in% c(1,2)) | (data.1$fly.self %in% c(3,4) & data.1$fly.truth %in% c(3,4) & data.1$fly.perception %in% c(3,4)))), ifelse(dat$outcome=="False consensus", length(which((data.1$fly.self %in% c(1,2) & data.1$fly.truth %in% c(3,4) & data.1$fly.perception %in% c(1,2)) | (data.1$fly.self %in% c(3,4) & data.1$fly.truth %in% c(1,2) & data.1$fly.perception %in% c(3,4)))), ifelse(dat$outcome=="False uniqueness", length(which((data.1$fly.self %in% c(1,2) & data.1$fly.truth %in% c(1,2) & data.1$fly.perception %in% c(3,4)) | (data.1$fly.self %in% c(3,4) & data.1$fly.truth %in% c(3,4) & data.1$fly.perception %in% c(1,2)))), ifelse(dat$outcome=="Aware of disagreement", length(which((data.1$fly.self %in% c(1,2) & data.1$fly.truth %in% c(3,4) & data.1$fly.perception %in% c(3,4)) | (data.1$fly.self %in% c(3,4) & data.1$fly.truth %in% c(1,2) & data.1$fly.perception %in% c(1,2)))), NA ))))
+
+dat$n[which(dat$item=="Meat tax")] <- ifelse(dat$outcome=="Aware of agreement", length(which((data.1$meat.self %in% c(1,2) & data.1$meat.truth %in% c(1,2) & data.1$meat.perception %in% c(1,2)) | (data.1$meat.self %in% c(3,4) & data.1$meat.truth %in% c(3,4) & data.1$meat.perception %in% c(3,4)))), ifelse(dat$outcome=="False consensus", length(which((data.1$meat.self %in% c(1,2) & data.1$meat.truth %in% c(3,4) & data.1$meat.perception %in% c(1,2)) | (data.1$meat.self %in% c(3,4) & data.1$meat.truth %in% c(1,2) & data.1$meat.perception %in% c(3,4)))), ifelse(dat$outcome=="False uniqueness", length(which((data.1$meat.self %in% c(1,2) & data.1$meat.truth %in% c(1,2) & data.1$meat.perception %in% c(3,4)) | (data.1$meat.self %in% c(3,4) & data.1$meat.truth %in% c(3,4) & data.1$meat.perception %in% c(1,2)))), ifelse(dat$outcome=="Aware of disagreement", length(which((data.1$meat.self %in% c(1,2) & data.1$meat.truth %in% c(3,4) & data.1$meat.perception %in% c(3,4)) | (data.1$meat.self %in% c(3,4) & data.1$meat.truth %in% c(1,2) & data.1$meat.perception %in% c(1,2)))), NA ))))
+
+dat$n[which(dat$item=="Expanding nature reserves")] <- ifelse(dat$outcome=="Aware of agreement", length(which((data.1$nature.self %in% c(1,2) & data.1$nature.truth %in% c(1,2) & data.1$nature.perception %in% c(1,2)) | (data.1$nature.self %in% c(3,4) & data.1$nature.truth %in% c(3,4) & data.1$nature.perception %in% c(3,4)))),  ifelse(dat$outcome=="False consensus", length(which((data.1$nature.self %in% c(1,2) & data.1$nature.truth %in% c(3,4) & data.1$nature.perception %in% c(1,2)) | (data.1$nature.self %in% c(3,4) & data.1$nature.truth %in% c(1,2) & data.1$nature.perception %in% c(3,4)))), ifelse(dat$outcome=="False uniqueness", length(which((data.1$nature.self %in% c(1,2) & data.1$nature.truth %in% c(1,2) & data.1$nature.perception %in% c(3,4)) | (data.1$nature.self %in% c(3,4) & data.1$nature.truth %in% c(3,4) & data.1$nature.perception %in% c(1,2)))), ifelse(dat$outcome=="Aware of disagreement", length(which((data.1$nature.self %in% c(1,2) & data.1$nature.truth %in% c(3,4) & data.1$nature.perception %in% c(3,4)) | (data.1$nature.self %in% c(3,4) & data.1$nature.truth %in% c(1,2) & data.1$nature.perception %in% c(1,2)))), NA ))))
+
+dat$n[which(dat$item=="Annual refugee admissions cap")] <- ifelse(dat$outcome=="Aware of agreement", length(which((data.1$cap.self %in% c(1,2) & data.1$cap.truth %in% c(1,2) & data.1$cap.perception %in% c(1,2)) | (data.1$cap.self %in% c(3,4) & data.1$cap.truth %in% c(3,4) & data.1$cap.perception %in% c(3,4)))), ifelse(dat$outcome=="False consensus", length(which((data.1$cap.self %in% c(1,2) & data.1$cap.truth %in% c(3,4) & data.1$cap.perception %in% c(1,2)) | (data.1$cap.self %in% c(3,4) & data.1$cap.truth %in% c(1,2) & data.1$cap.perception %in% c(3,4)))), ifelse(dat$outcome=="False uniqueness", length(which((data.1$cap.self %in% c(1,2) & data.1$cap.truth %in% c(1,2) & data.1$cap.perception %in% c(3,4)) | (data.1$cap.self %in% c(3,4) & data.1$cap.truth %in% c(3,4) & data.1$cap.perception %in% c(1,2)))), ifelse(dat$outcome=="Aware of disagreement", length(which((data.1$cap.self %in% c(1,2) & data.1$cap.truth %in% c(3,4) & data.1$cap.perception %in% c(3,4)) | (data.1$cap.self %in% c(3,4) & data.1$cap.truth %in% c(1,2) & data.1$cap.perception %in% c(1,2)))), NA ))))
+
+dat$n[which(dat$item=="Foreign students enrich Dutch universities")] <- ifelse(dat$outcome=="Aware of agreement", length(which((data.1$student.self %in% c(1,2) & data.1$student.truth %in% c(1,2) & data.1$student.perception %in% c(1,2)) | (data.1$student.self %in% c(3,4) & data.1$student.truth %in% c(3,4) & data.1$student.perception %in% c(3,4)))), ifelse(dat$outcome=="False consensus", length(which((data.1$student.self %in% c(1,2) & data.1$student.truth %in% c(3,4) & data.1$student.perception %in% c(1,2)) | (data.1$student.self %in% c(3,4) & data.1$student.truth %in% c(1,2) & data.1$student.perception %in% c(3,4)))), ifelse(dat$outcome=="False uniqueness", length(which((data.1$student.self %in% c(1,2) & data.1$student.truth %in% c(1,2) & data.1$student.perception %in% c(3,4)) | (data.1$student.self %in% c(3,4) & data.1$student.truth %in% c(3,4) & data.1$student.perception %in% c(1,2)))), ifelse(dat$outcome=="Aware of disagreement", length(which((data.1$student.self %in% c(1,2) & data.1$student.truth %in% c(3,4) & data.1$student.perception %in% c(3,4)) | (data.1$student.self %in% c(3,4) & data.1$student.truth %in% c(1,2) & data.1$student.perception %in% c(1,2)))), NA ))))
+
+dat$n[which(dat$item=="Migrant arrival threatens Dutch culture")] <- ifelse(dat$outcome=="Aware of agreement", length(which((data.1$threat.self %in% c(1,2) & data.1$threat.truth %in% c(1,2) & data.1$threat.perception %in% c(1,2)) | (data.1$threat.self %in% c(3,4) & data.1$threat.truth %in% c(3,4) & data.1$threat.perception %in% c(3,4)))), ifelse(dat$outcome=="False consensus", length(which((data.1$threat.self %in% c(1,2) & data.1$threat.truth %in% c(3,4) & data.1$threat.perception %in% c(1,2)) | (data.1$threat.self %in% c(3,4) & data.1$threat.truth %in% c(1,2) & data.1$threat.perception %in% c(3,4)))),ifelse(dat$outcome=="False uniqueness", length(which((data.1$threat.self %in% c(1,2) & data.1$threat.truth %in% c(1,2) & data.1$threat.perception %in% c(3,4)) | (data.1$threat.self %in% c(3,4) & data.1$threat.truth %in% c(3,4) & data.1$threat.perception %in% c(1,2)))), ifelse(dat$outcome=="Aware of disagreement", length(which((data.1$threat.self %in% c(1,2) & data.1$threat.truth %in% c(3,4) & data.1$threat.perception %in% c(3,4)) | (data.1$threat.self %in% c(3,4) & data.1$threat.truth %in% c(1,2) & data.1$threat.perception %in% c(1,2)))), NA ))))
+
+}
+#fix(dat)
+#check
+#for (i in unique(dat$item)) {
+#  subdat <- dat[which(dat$item==i),]
+#  print( sum(subdat$n))
+#} ## OKAY
+
+#also add proportion
+dat$prop <- dat$n/328
+
+# Define a color blindness friendly palette
+cb_palette <- cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73")
+
+
+#make ggplot object, for items belonging to themes
+p1  <- ggplot(data=subset(dat, group=="eco-friendly actions"), 
+       aes(x=factor(dat$item[which(dat$group=="eco-friendly actions")]), 
+           y=dat$prop[which(dat$group=="eco-friendly actions")], 
+           fill = factor(dat$outcome[which(dat$group=="eco-friendly actions")])))+
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label = dat$n[which(dat$group=="eco-friendly actions")]),
+            position = position_dodge(width = 0.9), vjust = -0.5) +
+  theme(axis.text.x = element_text(size = 12)) +
+  labs (x="eco-friendly actions", y="prop.") +
+  scale_x_discrete(labels = c("Sechand", "Animal", "Replace")) + 
+  scale_y_continuous(limits = c(0, .8)) +
+  scale_fill_manual(values = cb_palette) + 
+  theme(legend.position="none")
+
+p2 <- ggplot(data=subset(dat, group=="climate policy"), 
+                  aes(x=factor(dat$item[which(dat$group=="climate policy")]), 
+                      y=dat$prop[which(dat$group=="climate policy")], 
+                      fill = factor(dat$outcome[which(dat$group=="climate policy")]))) +
+    #add bars (counts)
+    geom_bar(stat = "identity", position = "dodge") +
+    #and percentage
+    geom_text(aes(label = dat$n[which(dat$group=="climate policy")]),
+              position = position_dodge(width = 0.9), vjust = -0.5) +
+    #adjust item labels (size)
+    theme(axis.text.x = element_text(size = 12)) +
+    #and axis labels (x=group, y=count)
+    labs (x="climate policy", y="prop") + 
+      scale_y_continuous(limits = c(0, .8)) +
+      scale_x_discrete(labels = c("Flight", "Meat", "Nature")) + 
+    scale_fill_manual(values = cb_palette) + 
+    #remove legend
+    theme(legend.position="none")
+
+p3 <- ggplot(data=subset(dat, group=="migration policy"), 
+                  aes(x=factor(dat$item[which(dat$group=="migration policy")]), 
+                      y=dat$prop[which(dat$group=="migration policy")], 
+                      fill = factor(dat$outcome[which(dat$group=="migration policy")]))) +
+    #add bars (counts)
+    geom_bar(stat = "identity", position = "dodge") +
+    #and percentage
+    geom_text(aes(label = dat$n[which(dat$group=="migration policy")]),
+              position = position_dodge(width = 0.9), vjust = -0.5) +
+    #adjust item labels (size)
+    theme(axis.text.x = element_text(size = 12)) +
+    #and axis labels (x=group, y=count)
+    labs (x="migration policy", y="prop.") +
+      scale_y_continuous(limits = c(0, .8)) +
+      scale_x_discrete(labels = c("Refugee", "Student", "Migrant")) + 
+    scale_fill_manual(values = cb_palette) + 
+  #remove legend
+    theme(legend.position="none")
+
+# make legend only plot with `flegend` custom function
+p4 <- ggplot(data=subset(dat, group=="migration policy"), 
+                  aes(x=factor(dat$item[which(dat$group=="migration policy")]), 
+                      y=dat$n[which(dat$group=="migration policy")], 
+                      fill = factor(dat$outcome[which(dat$group=="migration policy")]))) +
+    #add bars (counts)
+    geom_bar(stat = "identity", position = "dodge") +
+    #and percentage
+    geom_text(aes(label = paste0(round(dat$prop[which(dat$group=="migration policy")]*100), "%")),
+              position = position_dodge(width = 0.9), vjust = -0.5) +
+    #adjust item labels (size)
+    theme(axis.text.x = element_text(size = 7)) +
+      scale_fill_manual(values = cb_palette) + 
+    #and axis labels (x=group, y=count)
+    labs (x="migration policy", y="prop.", fill = "Outcome")
+
+legend <- flegend(p4)  
+
+combined_plot <- gridExtra::grid.arrange(p1,p2,p3,legend,
+                        nrow = 1)  
+  
+```
 
