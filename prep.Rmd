@@ -119,9 +119,9 @@ function myFunction() {
 
 # Download data
 
-The anonymized data-sets are deposited in DANS EASY. You can request permission to download the data-sets [here](link).
+The anonymized data-sets are deposited in DANS EASY. You can download the data-sets [here](https://ssh.datastations.nl/dataset.xhtml?persistentId=doi:10.17026/SS/GODKDR).
 
-Download the data-files `ego_public.R`, `alter_public.R`, and `data_public.R` and put them in the `./data/` folder. But first, make a `./data/` folder: 
+Download the data-files `short_public.R`, `alter_public.R`, and `data_public.R` and put them in the `./data/` folder. But first, make a `./data/` folder: 
 
 ```{r, eval=F}
 ifelse(!dir.exists("data"), dir.create("data"), FALSE)
@@ -177,8 +177,11 @@ alter <- merge(alter,merge, by="email")
 ego <- select(ego, -email, -firstname, -lastname, -ipaddr)
 alter <- select(alter, -email, -firstname, -lastname, -ipaddr)
 
-fsave(ego, file="ego_public.R")
-fsave(alter, file="alter_public.R")
+fsave(ego, file="ego_public.RDa")
+fsave(alter, file="alter_public.RDa")
+
+load("./data/data_public.R")
+fsave(x, file="data_public.RDa")
 ```
 
 </div>
@@ -189,15 +192,15 @@ fsave(alter, file="alter_public.R")
 
 # Import data
 
-- `ego_public.R`: anonymized data of the additional ego-survey
-- `alter_public.R`: anonymized data of the additional alter-survey
+- `short_public.R`: anonymized data of the additional ego-survey
+- `alters_public.R`: anonymized data of the additional alter-survey
 - `data_public.R`: anonymized data of alters nested in ego (with data on: ego, alter and dyad characteristics; constructed from the main survey data).
 
 
 ```{r, eval=FALSE}
-ego <- fload("./data/ego_public.R")
-alter <- fload("./data/alter_public.R")
-dat <- fload("./data/data_public.R")
+ego <- fload("./data/short_public.Rda")
+alter <- fload("./data/alters_public.Rda")
+dat <- fload("./data/data_public.Rda")
 ```
 
 --- 
@@ -864,7 +867,7 @@ fsave(df, "output.rda")
 # Output
 
 ```{r, echo=FALSE}
-df <- fload("./data/processed/20230511output.Rda")
+df <- fload("./data/processed/20230818output.Rda")
 options(knitr.kable.NA='')
 
 knitr::kable(df, digit=2, "html", caption="Output") %>%
@@ -876,10 +879,18 @@ knitr::kable(df, digit=2, "html", caption="Output") %>%
 
 <br>
 
+- `respnr` corresponds to the ego-id.
+- `dyad` pertains to the dyad- or alter-id (i.e., alters nested within ego).
+- `ties` are subsequently nested within dyads (due to the presence of both ego-alter observations and alter-ego observations).
+- `ego` indicates whether the reporting individual is the ego or the alter (reporting on the other).
+
+
+<br>
+
 First description of reporting accuracy.
 
 ```{r, echo=FALSE}
-df <- fload("./data/processed/20230511output.R")
+df <- fload("./data/processed/20230818output.Rda")
 options(knitr.kable.NA='')
 
 tab <- as.data.frame(psych::describe(df[,which(grepl("accuracy", names(df)))]))

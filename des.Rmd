@@ -50,6 +50,7 @@ gc()
 - `fsave`: Function to save data with time stamp in correct directory
 - `fload`: Function to load R-objects under new names
 - `flegend`: add common legend to combined ggplot2 ([source](https://www.geeksforgeeks.org/add-common-legend-to-combined-ggplot2-plots-in-r/)).
+- `ftheme`: custom ggplot theme 
 
 
 ```{r}
@@ -78,18 +79,24 @@ fload  <- function(fileName){
 }
 
 flegend <- function(plot) {
-	
-# get tabular interpretation of plot
-plot_table <- ggplot_gtable(ggplot_build(plot))
-	
-# Mark only legend in plot
-legend_plot <- which(sapply(plot_table$grobs, function(x) x$name) == "guide-box")
-							
-# extract legend
-legend <- plot_table$grobs[[legend_plot]]
-							
-# return legend
-return(legend)
+  plot_table <- ggplot_gtable(ggplot_build(plot))
+  legend_plot <- which(sapply(plot_table$grobs, function(x) x$name) == "guide-box")
+	legend <- plot_table$grobs[[legend_plot]]
+	return(legend)
+}
+
+#extrafont::font_import(paths = c("C:/Users/u244147/Downloads/Jost/", prompt = FALSE))
+ftheme <- function() {
+  # download font at https://fonts.google.com/specimen/Jost/
+  theme_minimal(base_family = "Jost") +
+    theme(panel.grid.minor = element_blank(),
+          plot.title = element_text(family = "Jost", face = "bold"),
+          axis.title = element_text(family = "Jost Medium"),
+          axis.title.x = element_text(hjust = 0),
+          axis.title.y = element_text(hjust = 1),
+          strip.text = element_text(family = "Jost", face = "bold",
+                                    size = rel(0.75), hjust = 0),
+          strip.background = element_rect(fill = "grey90", color = NA))
 }
 
 
@@ -112,6 +119,20 @@ fpackage.check(packages)
 rm(packages)
 ```
 
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+
+# import font JOST
+#extrafont::font_import(pattern = "Jost")
+extrafont::loadfonts(device="win")
+
+# Set default theme and font stuff
+theme_set(ftheme())
+update_geom_defaults("text", list(family = "Jost", fontface = "plain"))
+update_geom_defaults("label", list(family = "Jost", fontface = "plain"))
+
+```
+
+
 <br>
 
 ## import data
@@ -122,8 +143,8 @@ You may also obtain it by downloading: `r xfun::embed_file("./data shared/output
 
 
 ```{r}
-#today <- substr(gsub("[:-]", "", Sys.time()), 1, 8) #get todays date
-today <- "20230511" 
+today <- substr(gsub("[:-]", "", Sys.time()), 1, 8) #get todays date
+today <- "20230818" 
 data <- fload(paste0("./data/processed/", today, "output.RDa"))
 ```
 
@@ -150,6 +171,7 @@ data.1 <- data[which(data$multiplexity==1), ]
 
 #make a character variable indicating the type of (monoplex) relation
 data.1$Relationship <- ifelse(data.1$cdn==1, "Confidant", ifelse(data.1$study==1, "Study partner", ifelse(data.1$bff==1, "Best Friend", ifelse(data.1$csn==1, "Sports partner", NA) )))
+
 ```
 
 <br>
@@ -173,7 +195,7 @@ two additional:
 - dichotomous: does the perception and the self-report/truth fall on the same side of the midpoint of the scale? (`accuracy_side`)
 - dichotomous: does the perception precisely match the self-report/truth? (`accuracy_precise`)
 
-```{r}
+```{r, eval=FALSE}
 #accuracy side
 data.1$LR.accuracy_side <- ifelse(( (data.1$LR.perception %in% c(0:10)[1:round(length(c(0:10))/2)] & data.1$LR.truth %in% c(0:10)[1:round(length(c(0:10))/2)])
                                     |(data.1$LR.perception %in% c(0:10)[round(length(c(0:10))/2):11] & data.1$LR.truth %in%
@@ -229,8 +251,7 @@ data.1$imp_climate.accuracy_precise <- ifelse(data.1$imp_climate.perception == d
 ```
 
 
-```{r  fig.width=12, fig.height=8}
-
+```{r  fig.width=12, fig.height=8, eval=FALSE}
 #plotting data
 df <- rbind(
   data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( "accuracy", names(data.1))))],
@@ -256,6 +277,7 @@ df_long$RelationshipLab <- ifelse(df_long$Relationship=="Confidant",
                                         paste0("Sports partner (n=", length(which(data.1$Relationship=="Sports partner")), "; ", round(length(which(data.1$Relationship=="Sports partner")) / nrow(data.1) *100,2), "%)"), NA))))
                                         
 # create a ggplot object 
+
 p <- ggplot(df_long, aes(x = variable, y = value, fill = variable))
 
 # add a violin plot layer, with each variable represented by a different color
@@ -278,25 +300,15 @@ p <- p + theme(legend.position = "right", legend.title = element_blank())
 # remove x axis label
 p <- p + scale_x_discrete(labels = NULL)
 
-#adjust title text size
-p <- p + theme(
-  plot.title = element_text(size=16, face="bold"),
-  plot.subtitle = element_text(size = 12),
-  strip.text = element_text(size = 16),
-  legend.text = element_text(size = 12),
-  axis.title.y= element_text(size = 16),
-  axis.title.x= element_text(size = 16),
-  plot.caption = element_text(size = 12),
-)
-
 #last, give custom labels for the items
-p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  ))
+p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  )) 
 
 print(p)
-
+#ggsave("./figures/accuracyscores.png", width=12)
 ```
-  
-
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/accuracyscores.png")
+```
 
 <br>
 
@@ -309,7 +321,7 @@ Accuracy has no clear relationship with relationship type. Let's try different o
 
 ### accuracy_side
 
-```{r  fig.width=12, fig.height=8}
+```{r , eval=FALSE, fig.width=12, fig.height=8}
 #plotting data
 df <- rbind(
   data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( "accuracy_side", names(data.1))))],
@@ -351,33 +363,26 @@ p <- p + geom_hline(yintercept = 0.5, linetype = "dashed", color = "black")
 # Add labels above each bar
 p <- p + geom_text(aes(label = round(value, 2)), position = position_stack(vjust = .9))
 
-# Adjust the legend position and title
-p <- p + theme(legend.position = "right", legend.title = element_blank())
-
 # remove x axis label
 p <- p + scale_x_discrete(labels = NULL)
-
-#adjust title text size
-p <- p + theme(
-  plot.title = element_text(size=16, face="bold"),
-  plot.subtitle = element_text(size = 12),
-  strip.text = element_text(size = 16),
-  legend.text = element_text(size = 12),
-  axis.title.y= element_text(size = 16),
-  axis.title.x= element_text(size = 16),
-  plot.caption = element_text(size = 12),
-)
 
 #last, give custom labels for the items
 p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  ))
 
 print(p)
 
+#ggsave("./figures/accurate_side.png", width=12)
+
+```
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/accurate_side.png")
 ```
   
+  
+
 ### accuracy_precise  
   
-```{r  fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8, eval=FALSE}
 #plotting data
 df <- rbind(
   data.1[which(data.1$Relationship=="Confidant"), c(81, which(grepl( "accuracy_precise", names(data.1))))],
@@ -419,29 +424,21 @@ p <- p + geom_hline(yintercept = 0.5, linetype = "dashed", color = "black")
 # Add labels above each bar
 p <- p + geom_text(aes(label = round(value, 2)), position = position_stack(vjust = .9))
 
-# Adjust the legend position and title
-p <- p + theme(legend.position = "right", legend.title = element_blank())
-
 # remove x axis label
 p <- p + scale_x_discrete(labels = NULL)
-
-#adjust title text size
-p <- p + theme(
-  plot.title = element_text(size=16, face="bold"),
-  plot.subtitle = element_text(size = 12),
-  strip.text = element_text(size = 16),
-  legend.text = element_text(size = 12),
-  axis.title.y= element_text(size = 16),
-  axis.title.x= element_text(size = 16),
-  plot.caption = element_text(size = 12),
-)
 
 #last, give custom labels for the items
 p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  ))
 
 print(p)
+#ggsave("./figures/accurate_precise.png", width=12)
 
 ```
+
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/accurate_side.png")
+```
+  
 
 ## {.unlisted .unnumbered}
 
@@ -451,7 +448,7 @@ print(p)
 Relation between embeddedness and accuracy, across (monoplex) relationship types
 
 
-```{r  fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8,eval=FALSE}
 #exclude cases with NA on embeddedness (i.e., alter responses)
 df <- data.1[which(!is.na(data.1$embeddedness)),]
 #nrow(df) #164 ego-alter dyads
@@ -485,27 +482,22 @@ p <- p + facet_wrap(.~ RelationshipLab)
 
 p <- p + labs(x = "Structural embeddedness (0-1)", y = "Accuracy score (0-1)", title = "Relation between alter's structural embeddedness and ego's positioning accuracy,\nby (monoplex) relationship type (n=164)." , subtitle = "Scatterplot and LOESS curve", caption = "Note: accuracy = abs(perception - truth) / range(item).")
 
-#title
-p <- p + theme(
-  plot.title = element_text(size=16, face="bold"),
-  plot.subtitle = element_text(size = 12),
-  strip.text = element_text(size = 16),
-  legend.text = element_text(size = 12),
-  axis.title.y= element_text(size = 16),
-  axis.title.x= element_text(size = 16),
-  plot.caption = element_text(size = 12),
-)
 
 print(p)
+#ggsave("./figures/embed.png", width=12)
 ```
+
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/embed.png")
+```
+  
 
 
 ## different accuracy calculation {.tabset .tabset-fade} 
 
 
 ### accuracy_side
-```{r  fig.width=12, fig.height=8}
-
+```{r  fig.width=12, fig.height=8, eval=FALSE}
 #exclude cases with NA on embeddedness (i.e., alter responses)
 df <- data.1[which(!is.na(data.1$embeddedness)),]
 #nrow(df) #164 ego-alter dyads
@@ -539,22 +531,18 @@ p <- p + facet_wrap(.~ RelationshipLab)
 
 p <- p + labs(x = "Structural embeddedness (0-1)", y = "Accuracy_side (0, 1)", title = "Relation between alter's structural embeddedness and ego's accuracy_side,\nby (monoplex) relationship type (n=164)." , subtitle = "Scatterplot and GLM line")
 
-#title
-p <- p + theme(
-  plot.title = element_text(size=16, face="bold"),
-  plot.subtitle = element_text(size = 12),
-  strip.text = element_text(size = 16),
-  legend.text = element_text(size = 12),
-  axis.title.y= element_text(size = 16),
-  axis.title.x= element_text(size = 16),
-  plot.caption = element_text(size = 12),
-)
-
 print(p)
+
+#ggsave("./figures/embed_side.png", width=12)
 ```
 
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/embed_side.png")
+```
+  
+
 ### accuracy_precise
-```{r  fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8, eval=FALSE}
 
 #exclude cases with NA on embeddedness (i.e., alter responses)
 df <- data.1[which(!is.na(data.1$embeddedness)),]
@@ -589,18 +577,12 @@ p <- p + facet_wrap(.~ RelationshipLab)
 
 p <- p + labs(x = "Structural embeddedness (0-1)", y = "Accuracy_precise (0, 1)", title = "Relation between alter's structural embeddedness and ego's accuracy_precise,\nby (monoplex) relationship type (n=164)." , subtitle = "Scatterplot and GLM line")
 
-#title
-p <- p + theme(
-  plot.title = element_text(size=16, face="bold"),
-  plot.subtitle = element_text(size = 12),
-  strip.text = element_text(size = 16),
-  legend.text = element_text(size = 12),
-  axis.title.y= element_text(size = 16),
-  axis.title.x= element_text(size = 16),
-  plot.caption = element_text(size = 12),
-)
-
 print(p)
+#ggsave("./figures/embed_precise.png", width=12)
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/embed_precise.png")
 ```
 
 ## {.unlisted .unnumbered}
@@ -611,7 +593,7 @@ print(p)
 
 Does similarity/agreement differ across relationship types?
 
-```{r  fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8,eval=FALSE}
 #same violin plot, but replace accuracy with (dis)similarity
 
 #similarity = 1- ( |self-report - truth|)/range
@@ -672,30 +654,20 @@ p <- p + facet_wrap(~ RelationshipLab, nrow = 2)
 # add x and y axis labels and a plot title
 p <- p + labs(x = "Item", y = "Similarity score (0-1)", title = paste0("Similarity scores for ego and alter on multiple items, by (monoplex) relationship type (n=", nrow(data.1), ").") , subtitle = "Violin plots showing item-level similarity distribution with median (transparent square), mean (black square), and IQR (error bars).", caption = "Note: similarity = abs(self - truth) / range(item).")
 
-# Adjust the legend position and title
-p <- p + theme(legend.position = "right", legend.title = element_blank())
-
 # remove x axis label
 p <- p + scale_x_discrete(labels = NULL)
-
-#adjust title text size
-p <- p + theme(
-  plot.title = element_text(size=16, face="bold"),
-  plot.subtitle = element_text(size = 12),
-  strip.text = element_text(size = 16),
-  legend.text = element_text(size = 12),
-  axis.title.y= element_text(size = 16),
-  axis.title.x= element_text(size = 16),
-  plot.caption = element_text(size = 12),
-)
-
 
 #last, give custom labels for the items
 p <- p + scale_fill_discrete(labels = c("Left-right placement (0-10)", "Political importance: crime (1-4)", "Political importance: climate & environment (1-4)", "Political importance: discrimination (1-4)", "Political importance: housing (1-4)", "Political importance: refugee reception (1-4)", "Buying second-hand products (1-4)", "Minimize item replacement (1-4)", "Consuming less animal products (1-4)", "Flight tax (1-4)", "Meat tax (1-4)", "Expanding nature reserves (1-4)", "Annual refugee admissions cap (1-4)", "Foreign students enrich Dutch universities (1-4)", "Migrant arrival threatens Dutch culture (1-4)"  ))
 
 print(p)
-
+#ggsave("./figures/similarity.png", width=12)
 ```
+
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/similarity.png")
+```
+
 
 
 To-do: check with binary outcome (`accuracy_side` and `accuracy_precise`).
@@ -723,7 +695,7 @@ knitr::kable(matrix, "html", caption = "Concept matrix") %>%
 
 ## All
 
-```{r  fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8,eval=FALSE}
 #dataframe: outcome counts, per item, nested in groups/themes
 dat <- data.frame(group=rep(c("eco-friendly actions", "climate policy", "migration policy" ),each=12),
            item=rep(c("Buying second-hand products", "Minimize item replacement", "Consuming less animal products", "Flight tax", "Meat tax", "Expanding nature reserves", "Annual refugee admissions cap", "Foreign students enrich Dutch universities", "Migrant arrival threatens Dutch culture"),each=4),
@@ -760,11 +732,11 @@ dat$n[which(dat$item=="Migrant arrival threatens Dutch culture")] <- ifelse(dat$
 #also add proportion
 dat$prop <- dat$n/328
 
-# Define a color blindness friendly palette
-cb_palette <- cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73")
-
 # reorder conditions 
 dat$outcome <- factor(dat$outcome, levels = c("Aware of dyadic agreement", "False consensus", "Aware of dyadic disagreement", "False uniqueness"))
+
+# Define a color blindness friendly palette
+cb_palette <- cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73")
 
 #make ggplot object, for items belonging to themes
 p1  <- ggplot(data=subset(dat, group=="eco-friendly actions"), 
@@ -795,9 +767,10 @@ p2 <- ggplot(data=subset(dat, group=="climate policy"),
     #and axis labels (x=group, y=count)
     labs (x="climate policy", y="prop") + 
       scale_y_continuous(limits = c(0, .9)) +
-      scale_x_discrete(labels = c("Flight", "Meat", "Nature")) + 
-    scale_fill_manual(values = cb_palette) + 
-    #remove legend
+      scale_x_discrete(labels = c("Flight", "Meat", "Nature")) +
+  scale_fill_manual(values = cb_palette) + 
+    
+  #remove legend
     theme(legend.position="none")
 
 
@@ -838,14 +811,20 @@ p4 <- ggplot(data=subset(dat, group=="migration policy"),
 
 legend <- flegend(p4)  
 
-combined_plot <- gridExtra::grid.arrange(p1,p2,p3,legend,
-                        nrow = 1)  
-  
+combined_plot <- gridExtra::arrangeGrob(p1,p2,p3,legend,nrow=1)
+
+#ggsave(file="./figures/outcomes_all.png", combined_plot, width=12)
+
 ```
+
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/outcomes_all.png")
+```
+
 
 ## Confidants
 
-```{r  fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8,eval=FALSE}
 #dataframe: outcome counts, per item, nested in groups/themes
 dat <- data.frame(group=rep(c("eco-friendly actions", "climate policy", "migration policy" ),each=12),
            item=rep(c("Buying second-hand products", "Minimize item replacement", "Consuming less animal products", "Flight tax", "Meat tax", "Expanding nature reserves", "Annual refugee admissions cap", "Foreign students enrich Dutch universities", "Migrant arrival threatens Dutch culture"),each=4),
@@ -965,14 +944,19 @@ p4 <- ggplot(data=subset(dat, group=="migration policy"),
 
 legend <- flegend(p4)  
 
-combined_plot <- gridExtra::grid.arrange(p1,p2,p3,legend,
-                        nrow = 1)  
- 
+combined_plot <- gridExtra::arrangeGrob(p1,p2,p3,legend,nrow=1)
+
+#ggsave(file="./figures/outcomes_cdn.png", combined_plot, width=12)
 ```
+
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/outcomes_cdn.png")
+```
+
 
 ## Study
 
-```{r  fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8,eval=FALSE}
 #dataframe: outcome counts, per item, nested in groups/themes
 dat <- data.frame(group=rep(c("eco-friendly actions", "climate policy", "migration policy" ),each=12),
            item=rep(c("Buying second-hand products", "Minimize item replacement", "Consuming less animal products", "Flight tax", "Meat tax", "Expanding nature reserves", "Annual refugee admissions cap", "Foreign students enrich Dutch universities", "Migrant arrival threatens Dutch culture"),each=4),
@@ -1093,15 +1077,21 @@ p4 <- ggplot(data=subset(dat, group=="migration policy"),
 
 legend <- flegend(p4)  
 
-combined_plot <- gridExtra::grid.arrange(p1,p2,p3,legend,
-                        nrow = 1)  
- 
+combined_plot <- gridExtra::arrangeGrob(p1,p2,p3,legend,nrow=1)
+
+
+#ggsave(file="./figures/outcomes_study.png", combined_plot, width=12)
+
 ```
 
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/outcomes_study.png")
+```
+ 
 
 ## Friends
 
-```{r  fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8,eval=FALSE}
 #dataframe: outcome counts, per item, nested in groups/themes
 dat <- data.frame(group=rep(c("eco-friendly actions", "climate policy", "migration policy" ),each=12),
            item=rep(c("Buying second-hand products", "Minimize item replacement", "Consuming less animal products", "Flight tax", "Meat tax", "Expanding nature reserves", "Annual refugee admissions cap", "Foreign students enrich Dutch universities", "Migrant arrival threatens Dutch culture"),each=4),
@@ -1222,15 +1212,21 @@ p4 <- ggplot(data=subset(dat, group=="migration policy"),
 
 legend <- flegend(p4)  
 
-combined_plot <- gridExtra::grid.arrange(p1,p2,p3,legend,
-                        nrow = 1)  
- 
+combined_plot <- gridExtra::arrangeGrob(p1,p2,p3,legend,nrow=1)
+
+
+#ggsave(file="./figures/outcomes_bff.png", combined_plot, width=12)
 ```
+
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/outcomes_bff.png")
+```
+
 
 
 ## Sports partners
 
-```{r  fig.width=12, fig.height=8}
+```{r  fig.width=12, fig.height=8,eval=FALSE}
 #dataframe: outcome counts, per item, nested in groups/themes
 dat <- data.frame(group=rep(c("eco-friendly actions", "climate policy", "migration policy" ),each=12),
            item=rep(c("Buying second-hand products", "Minimize item replacement", "Consuming less animal products", "Flight tax", "Meat tax", "Expanding nature reserves", "Annual refugee admissions cap", "Foreign students enrich Dutch universities", "Migrant arrival threatens Dutch culture"),each=4),
@@ -1351,9 +1347,15 @@ p4 <- ggplot(data=subset(dat, group=="migration policy"),
 
 legend <- flegend(p4)  
 
-combined_plot <- gridExtra::grid.arrange(p1,p2,p3,legend,
-                        nrow = 1)  
- 
+combined_plot <- gridExtra::arrangeGrob(p1,p2,p3,legend,nrow=1)
+
+#ggsave(file="./figures/outcomes_csn.png", combined_plot, width=12)
+
 ```
+
+```{r, echo=FALSE}
+knitr::include_graphics("./figures/outcomes_csn.png")
+```
+
 
 # {.unlisted .unnumbered}
